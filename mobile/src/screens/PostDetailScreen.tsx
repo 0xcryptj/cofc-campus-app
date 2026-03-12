@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     padding: Spacing.base,
     marginBottom: Spacing.base,
-    ...Shadow.card,
+    ...Shadow.sm,
   },
   header: {
     flexDirection: 'row',
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     borderRadius: Radius.md,
     padding: Spacing.md,
-    ...Shadow.card,
+    ...Shadow.sm,
   },
   commentHeader: {
     flexDirection: 'row',

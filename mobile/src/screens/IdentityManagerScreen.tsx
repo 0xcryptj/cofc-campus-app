@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: Colors.border,
-    ...Shadow.card,
+    ...Shadow.sm,
   },
   cardActive: {
     borderColor: Colors.maroon,

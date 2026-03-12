@@ -1,0 +1,86 @@
+CHARLESTON TEA — SUGGESTED CUSTOM ASSETS
+=========================================
+
+All assets should be designed with the CofC Maroon (#6B1D1D) as the primary brand color.
+Export all assets at 3x resolution for Retina displays.
+
+─────────────────────────────────────────
+APP ICON
+─────────────────────────────────────────
+File: app-icon.png
+Size: 1024x1024px (Expo will generate all sizes)
+Concept: A minimalist tea cup or a stylized "T" lettermark inside a soft rounded square.
+         The background could be a warm cream or deep maroon.
+         Avoid gradients — flat or very subtle shading only.
+         Should read clearly at 60x60px on a home screen.
+
+─────────────────────────────────────────
+SPLASH SCREEN
+─────────────────────────────────────────
+File: splash.png
+Size: 1242x2688px (iPhone Pro Max — scales down)
+Concept: Centered wordmark "Charleston Tea" or just the icon on a clean background.
+         Background: Warm off-white (#F8F7F5) or deep maroon (#6B1D1D).
+         No text other than the brand name — keep it minimal.
+
+─────────────────────────────────────────
+WORDMARK / LOGO
+─────────────────────────────────────────
+File: logo-light.svg, logo-dark.svg
+Concept: "Charleston Tea" in an elegant serif or refined sans-serif.
+         Could include a small tea leaf or steam motif.
+         Light version: maroon on transparent
+         Dark version: white on transparent (for dark headers/modals)
+
+─────────────────────────────────────────
+TAB BAR ICONS
+─────────────────────────────────────────
+These should be custom SVG/PNG icons at 28x28px (export at 3x = 84x84px).
+Keep strokes clean, 2px weight, no fill (outline style).
+
+feed-icon.png         — A simple horizontal list/feed icon (three stacked lines with left dots)
+identities-icon.png   — An abstract mask or two overlapping circles (representing anonymity)
+settings-icon.png     — A minimal gear or sliders icon
+
+─────────────────────────────────────────
+EMPTY STATE ILLUSTRATIONS
+─────────────────────────────────────────
+File: empty-feed.png (400x400px)
+Concept: A subtle, flat illustration of an empty bulletin board or foggy campus scene.
+         Muted maroon/cream tones. No text in the image — handled by code.
+
+─────────────────────────────────────────
+IDENTITY AVATAR FRAME
+─────────────────────────────────────────
+File: avatar-frame.svg
+Concept: A decorative ring or subtle frame that goes around the colored avatar circle.
+         Used in IdentityManagerScreen to show the "active" identity.
+         Thin maroon ring with a subtle glow effect.
+
+─────────────────────────────────────────
+ONBOARDING BACKGROUNDS
+─────────────────────────────────────────
+File: welcome-bg.svg or welcome-bg.png
+Concept: Very subtle College of Charleston campus texture or silhouette —
+         think Randolph Hall outline, the Cistern, or the College's iconic ironwork patterns.
+         Should be used as a light watermark at 5-10% opacity behind the welcome screen.
+         Cream or maroon tones only.
+
+─────────────────────────────────────────
+CHANNEL ICONS (optional — nice to have)
+─────────────────────────────────────────
+dating-icon.png       — Minimal heart or two overlapping leaf shapes (keep tasteful)
+general-icon.png      — A CofC building silhouette or simple campus landmark
+lore-icon.png         — A small scroll or quill / magnifying glass icon
+
+─────────────────────────────────────────
+NOTES FOR DESIGNERS
+─────────────────────────────────────────
+- Primary brand color: #6B1D1D (CofC Maroon)
+- Background color: #F8F7F5 (warm off-white)
+- All icons should follow a consistent stroke weight (2px at 1x)
+- Avoid drop shadows in icons — use them only in UI layer
+- Do not use gradients in icons — flat color preferred
+- All app icons must follow Apple Human Interface Guidelines for app icon masks
+- Export PNG at @1x, @2x, @3x for all UI icons
+- Export app icon as a single 1024x1024 PNG (Expo handles resizing)

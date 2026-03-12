@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Image,
+  TouchableWithoutFeedback,
   StyleSheet,
+  Animated,
   Alert,
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, Shadow } from '../theme';
+import FadeImage from './FadeImage';
 import { timeAgo } from '../utils/timeAgo';
 import { logReport } from '../services/moderationService';
 import type { Post } from '../types';
@@ -16,78 +18,123 @@ interface Props {
   post: Post;
   onPress: () => void;
   onUpvote: (postId: string) => void;
-  activeIdentityId: string; // the identity currently in use
+  activeIdentityId: string;
 }
 
 export default function PostCard({ post, onPress, onUpvote, activeIdentityId }: Props) {
+  const upvoteScale = useRef(new Animated.Value(1)).current;
+
+  function handleUpvoteTap() {
+    Animated.sequence([
+      Animated.spring(upvoteScale, {
+        toValue: 1.45,
+        useNativeDriver: true,
+        speed: 40,
+        bounciness: 14,
+      }),
+      Animated.spring(upvoteScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 20,
+        bounciness: 6,
+      }),
+    ]).start();
+    onUpvote(post.id);
+  }
+
   function handleReport() {
     Alert.alert('Report Post', 'Why are you reporting this?', [
       {
         text: 'Spam',
-        onPress: () => logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'spam' }),
+        onPress: () =>
+          logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'spam' }),
       },
       {
         text: 'Harassment',
-        onPress: () => logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'harassment' }),
+        onPress: () =>
+          logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'harassment' }),
       },
       {
         text: 'Inappropriate',
-        onPress: () => logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'inappropriate' }),
+        onPress: () =>
+          logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'inappropriate' }),
       },
       { text: 'Cancel', style: 'cancel' },
     ]);
   }
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
-      {/* Header row */}
-      <View style={styles.header}>
-        {/* Avatar circle */}
-        <View style={[styles.avatar, { backgroundColor: post.anonAvatarColor }]}>
-          <Text style={styles.avatarInitial}>
-            {post.anonDisplayName[0]}
-          </Text>
+    // Outer press target for navigating to detail
+    <TouchableWithoutFeedback onPress={onPress}>
+      <View style={styles.card}>
+
+        {/* ── Header ────────────────────────────────────── */}
+        <View style={styles.header}>
+          <View style={[styles.avatar, { backgroundColor: post.anonAvatarColor }]}>
+            <Text style={styles.avatarInitial} allowFontScaling={false}>
+              {post.anonDisplayName[0]}
+            </Text>
+          </View>
+
+          <View style={styles.headerMeta}>
+            <Text style={styles.displayName} numberOfLines={1}>
+              {post.anonDisplayName}
+            </Text>
+            <Text style={styles.timestamp}>{timeAgo(post.createdAt)}</Text>
+          </View>
+
+          <TouchableOpacity
+            onPress={handleReport}
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+            style={styles.moreBtn}
+          >
+            <View style={styles.moreDot} />
+            <View style={styles.moreDot} />
+            <View style={styles.moreDot} />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.headerText}>
-          <Text style={styles.displayName}>{post.anonDisplayName}</Text>
-          <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
+        {/* ── Body text ─────────────────────────────────── */}
+        <Text style={styles.body}>{post.textBody}</Text>
+
+        {/* ── Image (bleeds edge-to-edge inside the card) ─ */}
+        {post.imageUri ? (
+          <View style={styles.imageWrapper}>
+            <FadeImage uri={post.imageUri} aspectRatio={4 / 3} />
+          </View>
+        ) : null}
+
+        {/* ── Footer actions ────────────────────────────── */}
+        <View style={styles.footer}>
+          {/* Upvote */}
+          <TouchableOpacity
+            onPress={handleUpvoteTap}
+            activeOpacity={0.75}
+            style={styles.action}
+          >
+            <Animated.View style={{ transform: [{ scale: upvoteScale }] }}>
+              <View style={[styles.upvoteIcon, post.upvotedByMe && styles.upvoteIconActive]}>
+                <Text style={[styles.upvoteChevron, post.upvotedByMe && styles.upvoteChevronActive]}>
+                  ▲
+                </Text>
+              </View>
+            </Animated.View>
+            <Text style={[styles.actionCount, post.upvotedByMe && styles.actionCountActive]}>
+              {post.upvoteCount}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Comments */}
+          <View style={styles.action}>
+            <View style={styles.commentIcon}>
+              <Text style={styles.commentChevron}>◯</Text>
+            </View>
+            <Text style={styles.actionCount}>{post.commentCount}</Text>
+          </View>
         </View>
 
-        <TouchableOpacity onPress={handleReport} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Text style={styles.moreIcon}>···</Text>
-        </TouchableOpacity>
       </View>
-
-      {/* Post text */}
-      <Text style={styles.body}>{post.textBody}</Text>
-
-      {/* Optional image */}
-      {post.imageUri ? (
-        <Image source={{ uri: post.imageUri }} style={styles.image} resizeMode="cover" />
-      ) : null}
-
-      {/* Footer row */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.footerBtn}
-          onPress={() => onUpvote(post.id)}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.upvoteIcon, post.upvotedByMe && styles.upvotedIcon]}>
-            ▲
-          </Text>
-          <Text style={[styles.footerCount, post.upvotedByMe && styles.upvotedCount]}>
-            {post.upvoteCount}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.footerBtn}>
-          <Text style={styles.commentIcon}>💬</Text>
-          <Text style={styles.footerCount}>{post.commentCount}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -95,19 +142,23 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
-    padding: Spacing.base,
     marginHorizontal: Spacing.base,
     marginBottom: Spacing.md,
-    ...Shadow.card,
+    overflow: 'hidden',  // clips image to card corners — critical
+    ...Shadow.sm,
   },
+
+  // ── Header ─────────────────────────────────────────
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   avatar: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: Radius.full,
     justifyContent: 'center',
     alignItems: 'center',
@@ -115,68 +166,109 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     color: Colors.white,
-    fontSize: Typography.base,
+    fontSize: 13,
     fontWeight: Typography.bold,
+    letterSpacing: 0.2,
   },
-  headerText: {
+  headerMeta: {
     flex: 1,
+    gap: 1,
   },
   displayName: {
     fontSize: Typography.sm,
     fontWeight: Typography.semibold,
     color: Colors.textPrimary,
+    letterSpacing: Typography.tightTracking,
   },
-  time: {
+  timestamp: {
     fontSize: Typography.xs,
     color: Colors.textMuted,
-    marginTop: 1,
+    fontWeight: Typography.regular,
   },
-  moreIcon: {
-    fontSize: Typography.md,
-    color: Colors.textMuted,
-    letterSpacing: 1,
+  moreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     paddingLeft: Spacing.sm,
   },
+  moreDot: {
+    width: 3,
+    height: 3,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.textMuted,
+  },
+
+  // ── Body ────────────────────────────────────────────
   body: {
     fontSize: Typography.base,
     color: Colors.textPrimary,
-    lineHeight: 22,
-    marginBottom: Spacing.sm,
+    lineHeight: Typography.lineHeightBase,
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.md,
+    letterSpacing: Typography.normalTracking,
   },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: Radius.md,
-    marginBottom: Spacing.sm,
+
+  // ── Image ───────────────────────────────────────────
+  imageWrapper: {
+    // No padding — FadeImage fills the card width edge to edge.
+    // The card's overflow:hidden clips it to the border radius.
   },
+
+  // ── Footer ──────────────────────────────────────────
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm + 2,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.divider,
     gap: Spacing.lg,
-    marginTop: Spacing.xs,
   },
-  footerBtn: {
+  action: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
   upvoteIcon: {
-    fontSize: Typography.sm,
+    width: 26,
+    height: 26,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceAlt,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  upvoteIconActive: {
+    backgroundColor: Colors.maroonFaint,
+  },
+  upvoteChevron: {
+    fontSize: 10,
     color: Colors.textMuted,
+    lineHeight: 12,
   },
-  upvotedIcon: {
+  upvoteChevronActive: {
     color: Colors.maroon,
-  },
-  footerCount: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.medium,
-  },
-  upvotedCount: {
-    color: Colors.maroon,
-    fontWeight: Typography.bold,
   },
   commentIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceAlt,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  commentChevron: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    lineHeight: 14,
+  },
+  actionCount: {
     fontSize: Typography.sm,
+    fontWeight: Typography.medium,
+    color: Colors.textSecondary,
+    minWidth: 16,
+  },
+  actionCountActive: {
+    color: Colors.maroon,
+    fontWeight: Typography.semibold,
   },
 });

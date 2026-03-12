@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     overflow: 'hidden',
-    ...Shadow.card,
+    ...Shadow.sm,
   },
   sectionLabel: {
     fontSize: Typography.xs,

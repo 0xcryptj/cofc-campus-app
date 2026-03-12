@@ -9,10 +9,9 @@ import MainTabs from './MainTabs';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 
+import { Colors, Typography } from '../theme';
 import type { Post } from '../types';
 
-// Every screen reachable from the root stack is listed here.
-// Screens inside tabs are managed by MainTabs.
 export type RootStackParamList = {
   Welcome: undefined;
   SignUp: undefined;
@@ -27,28 +26,67 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Auth flow */}
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          // Crisp, fast slide — matches iOS system behavior
+          animation: 'slide_from_right',
+          animationDuration: 320,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true, // swipe from anywhere to go back
+        }}
+      >
+        {/* ── Auth flow ─────────────────────────────────── */}
+        <Stack.Screen
+          name="Welcome"
+          component={WelcomeScreen}
+          options={{ animation: 'fade' }}  // no slide on first load
+        />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
 
-        {/* Main app with bottom tabs */}
-        <Stack.Screen name="Main" component={MainTabs} />
+        {/* ── Main app ──────────────────────────────────── */}
+        <Stack.Screen
+          name="Main"
+          component={MainTabs}
+          options={{ animation: 'fade' }}  // clean fade into the app
+        />
 
-        {/* Screens that slide over tabs */}
+        {/* ── Post detail (slides in from right) ────────── */}
         <Stack.Screen
           name="PostDetail"
           component={PostDetailScreen}
-          options={{ headerShown: true, title: 'Post', headerBackTitle: 'Back' }}
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Feed',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: Colors.background },
+            headerTintColor: Colors.maroon,
+            headerTitleStyle: {
+              fontSize: Typography.md,
+              fontWeight: Typography.semibold,
+              color: Colors.textPrimary,
+            },
+          }}
         />
+
+        {/* ── Create post (slides up as modal) ──────────── */}
         <Stack.Screen
           name="CreatePost"
           component={CreatePostScreen}
           options={{
-            presentation: 'modal',
+            presentation: 'formSheet',   // native iOS sheet with handle bar
             headerShown: true,
             title: 'New Post',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: Colors.background },
+            headerTitleStyle: {
+              fontSize: Typography.md,
+              fontWeight: Typography.semibold,
+              color: Colors.textPrimary,
+            },
+            headerTintColor: Colors.maroon,
           }}
         />
       </Stack.Navigator>
