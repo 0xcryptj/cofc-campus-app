@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
-const BG_IMAGE = require('../../../assets/background.png');
+const BG_IMAGE = require('../../assets/background.png');
 
 // ─── Same dark palette as WelcomeScreen ───────────────────────────────────────
 const D = {

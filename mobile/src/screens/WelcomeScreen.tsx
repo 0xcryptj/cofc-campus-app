@@ -20,9 +20,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-// Background image lives at repo-root /assets/background.png.
-// The relative path from mobile/src/screens/ goes up 3 levels.
-const BG_IMAGE = require('../../../assets/background.png');
+const BG_IMAGE = require('../../assets/background.png');
 
 // ─── Dark onboarding palette (not from global theme) ──────────────────────────
 const D = {
