@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
+  View, Text, FlatList, TextInput, TouchableOpacity,
+  StyleSheet, KeyboardAvoidingView, Platform, RefreshControl,
   Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors, Typography, Spacing, Radius, Shadow } from '../theme';
+import Avatar from '../components/Avatar';
+import FadeImage from '../components/FadeImage';
+import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { timeAgo } from '../utils/timeAgo';
 import { logReport } from '../services/moderationService';
 import { MOCK_COMMENTS, MOCK_IDENTITIES } from '../services/mockData';
@@ -24,111 +20,121 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
 
 export default function PostDetailScreen({ route }: Props) {
   const { post } = route.params;
+  const insets = useSafeAreaInsets();
   const [comments, setComments] = useState<Comment[]>(
-    MOCK_COMMENTS.filter((c) => c.postId === post.id)
+    MOCK_COMMENTS.filter(c => c.postId === post.id)
   );
   const [draft, setDraft] = useState('');
-
+  const [refreshing, setRefreshing] = useState(false);
   const activeIdentity = MOCK_IDENTITIES[0];
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await new Promise(r => setTimeout(r, 600));
+    setRefreshing(false);
+  }, []);
 
   function submitComment() {
     const text = draft.trim();
     if (!text) return;
-    const newComment: Comment = {
+    const c: Comment = {
       id: `c-${Date.now()}`,
       postId: post.id,
       anonIdentityId: activeIdentity.id,
       anonDisplayName: activeIdentity.displayName,
-      anonAvatarColor: activeIdentity.avatarColor,
       text,
       createdAt: new Date().toISOString(),
     };
-    setComments((prev) => [...prev, newComment]);
+    setComments(prev => [...prev, c]);
     setDraft('');
   }
 
-  function reportComment(commentId: string) {
-    Alert.alert('Report Comment', 'Why are you reporting this?', [
-      {
-        text: 'Harassment',
-        onPress: () =>
-          logReport({ reporterId: activeIdentity.id, contentId: commentId, contentType: 'comment', reason: 'harassment' }),
-      },
-      {
-        text: 'Spam',
-        onPress: () =>
-          logReport({ reporterId: activeIdentity.id, contentId: commentId, contentType: 'comment', reason: 'spam' }),
-      },
+  function reportComment(id: string) {
+    Alert.alert('Report Comment', 'What is the issue?', [
+      { text: 'Harassment', onPress: () => logReport({ reporterId: activeIdentity.id, contentId: id, contentType: 'comment', reason: 'harassment' }) },
+      { text: 'Spam', onPress: () => logReport({ reporterId: activeIdentity.id, contentId: id, contentType: 'comment', reason: 'spam' }) },
       { text: 'Cancel', style: 'cancel' },
     ]);
   }
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={88}
+      keyboardVerticalOffset={90}
     >
       <FlatList
         data={comments}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        keyExtractor={item => item.id}
+        contentContainerStyle={{ paddingBottom: Space.xl }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={Colors.primary}
+          />
+        }
+
+        /* ── Original post — pinned at top ─────────── */
         ListHeaderComponent={
           <View>
-            {/* Post body */}
-            <View style={styles.postCard}>
-              <View style={styles.header}>
-                <View style={[styles.avatar, { backgroundColor: post.anonAvatarColor }]}>
-                  <Text style={styles.avatarInitial}>{post.anonDisplayName[0]}</Text>
-                </View>
-                <View>
-                  <Text style={styles.displayName}>{post.anonDisplayName}</Text>
-                  <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
-                </View>
+            <View style={styles.pinnedCard}>
+              {post.imageUri ? <FadeImage uri={post.imageUri} aspectRatio={4 / 3} /> : null}
+              <View style={styles.pinnedBody}>
+                <Text style={styles.pinnedText}>{post.textBody}</Text>
               </View>
-              <Text style={styles.postBody}>{post.textBody}</Text>
-              {post.imageUri ? (
-                <Image source={{ uri: post.imageUri }} style={styles.postImage} resizeMode="cover" />
-              ) : null}
-              <View style={styles.postStats}>
-                <Text style={styles.statText}>▲ {post.upvoteCount}</Text>
-                <Text style={styles.statText}>💬 {post.commentCount}</Text>
+              <View style={styles.pinnedFooter}>
+                <Avatar displayName={post.anonDisplayName} size={36} />
+                <View style={styles.pinnedMeta}>
+                  <Text style={styles.pinnedName}>{post.anonDisplayName}</Text>
+                  <Text style={styles.pinnedTime}>{timeAgo(post.createdAt)}</Text>
+                </View>
+                <View style={styles.pinnedStats}>
+                  <Text style={styles.statText}>▲ {post.upvoteCount}</Text>
+                  <Text style={styles.statText}>◯ {post.commentCount}</Text>
+                </View>
               </View>
             </View>
 
-            {/* Comments heading */}
             <Text style={styles.commentsHeading}>
-              {comments.length === 0 ? 'No comments yet' : `Comments (${comments.length})`}
+              {comments.length === 0
+                ? 'No replies yet'
+                : `${comments.length} ${comments.length === 1 ? 'reply' : 'replies'}`}
             </Text>
           </View>
         }
+
+        /* ── Comment rows ──────────────────────────── */
         renderItem={({ item }) => (
-          <View style={styles.commentCard}>
-            <View style={styles.commentHeader}>
-              <View style={[styles.commentAvatar, { backgroundColor: item.anonAvatarColor }]}>
-                <Text style={styles.commentAvatarInitial}>{item.anonDisplayName[0]}</Text>
-              </View>
-              <View style={styles.commentMeta}>
+          <View style={styles.commentRow}>
+            <Avatar displayName={item.anonDisplayName} size={36} />
+            <View style={styles.commentBubble}>
+              <View style={styles.commentHeader}>
                 <Text style={styles.commentName}>{item.anonDisplayName}</Text>
                 <Text style={styles.commentTime}>{timeAgo(item.createdAt)}</Text>
+                <TouchableOpacity
+                  onPress={() => reportComment(item.id)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={styles.commentReport}
+                >
+                  <View style={styles.dotRow}>
+                    <View style={styles.dot} /><View style={styles.dot} /><View style={styles.dot} />
+                  </View>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => reportComment(item.id)}>
-                <Text style={styles.commentMoreIcon}>···</Text>
-              </TouchableOpacity>
+              <Text style={styles.commentText}>{item.text}</Text>
             </View>
-            <Text style={styles.commentText}>{item.text}</Text>
           </View>
         )}
       />
 
-      {/* Comment input bar */}
-      <View style={styles.inputBar}>
-        <View style={[styles.inputAvatar, { backgroundColor: activeIdentity.avatarColor }]}>
-          <Text style={styles.inputAvatarInitial}>{activeIdentity.displayName[0]}</Text>
-        </View>
+      {/* ── Reply bar — pinned above keyboard ─────── */}
+      <View style={[styles.replyBar, { paddingBottom: insets.bottom + Space.sm }]}>
+        <Avatar displayName={activeIdentity.displayName} size={36} />
         <TextInput
-          style={styles.input}
-          placeholder="Add a comment..."
+          style={styles.replyInput}
+          placeholder="Reply anonymously…"
           placeholderTextColor={Colors.textMuted}
           value={draft}
           onChangeText={setDraft}
@@ -140,7 +146,7 @@ export default function PostDetailScreen({ route }: Props) {
           disabled={!draft.trim()}
           style={[styles.sendBtn, !draft.trim() && styles.sendBtnDisabled]}
         >
-          <Text style={styles.sendBtnText}>Send</Text>
+          <Text style={styles.sendBtnText} allowFontScaling={false}>↑</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -148,168 +154,166 @@ export default function PostDetailScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  list: {
-    paddingBottom: Spacing.xl,
-  },
-  postCard: {
+
+  // ── Pinned post ─────────────────────────────────
+  pinnedCard: {
     backgroundColor: Colors.surface,
-    padding: Spacing.base,
-    marginBottom: Spacing.base,
-    ...Shadow.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    marginBottom: Space.sm,
+    ...Elevation.card,
   },
-  header: {
+  pinnedBody: {
+    paddingHorizontal: Space.md,
+    paddingTop: Space.md,
+    paddingBottom: Space.sm,
+  },
+  pinnedText: {
+    fontSize: Type.size.body,
+    color: Colors.textPrimary,
+    lineHeight: Type.leading.body,
+  },
+  pinnedFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Space.md,
+    paddingVertical: Space.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: Space.sm,
   },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: Radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
+  pinnedMeta: {
+    flex: 1,
+    gap: 1,
   },
-  avatarInitial: {
-    color: Colors.white,
-    fontWeight: Typography.bold,
-    fontSize: Typography.base,
-  },
-  displayName: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+  pinnedName: {
+    fontSize: Type.size.label,
+    fontWeight: Type.weight.bold,
     color: Colors.textPrimary,
   },
-  time: {
-    fontSize: Typography.xs,
+  pinnedTime: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
     color: Colors.textMuted,
+    letterSpacing: Type.tracking.caption,
   },
-  postBody: {
-    fontSize: Typography.base,
-    color: Colors.textPrimary,
-    lineHeight: 23,
-    marginBottom: Spacing.sm,
-  },
-  postImage: {
-    width: '100%',
-    height: 220,
-    borderRadius: Radius.md,
-    marginBottom: Spacing.sm,
-  },
-  postStats: {
+  pinnedStats: {
     flexDirection: 'row',
-    gap: Spacing.base,
+    gap: Space.md,
   },
   statText: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.medium,
-  },
-  commentsHeading: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
     color: Colors.textMuted,
-    paddingHorizontal: Spacing.base,
-    marginBottom: Spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: Type.tracking.caption,
   },
-  commentCard: {
+
+  // ── Comments section label ───────────────────────
+  commentsHeading: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.semibold,
+    color: Colors.textMuted,
+    letterSpacing: Type.tracking.label,
+    textTransform: 'uppercase',
+    paddingHorizontal: Space.md,
+    paddingBottom: Space.sm,
+  },
+
+  // ── Comment row ─────────────────────────────────
+  commentRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Space.md,
+    marginBottom: Space.sm,
+    gap: Space.sm,
+    alignItems: 'flex-start',
+  },
+  commentBubble: {
+    flex: 1,
     backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.base,
-    marginBottom: Spacing.sm,
     borderRadius: Radius.md,
-    padding: Spacing.md,
-    ...Shadow.sm,
+    padding: Space.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...Elevation.card,
   },
   commentHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  commentAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: Radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-  },
-  commentAvatarInitial: {
-    color: Colors.white,
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
-  },
-  commentMeta: {
-    flex: 1,
+    marginBottom: Space.xs,
+    gap: Space.sm,
   },
   commentName: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: Type.size.label,
+    fontWeight: Type.weight.bold,
     color: Colors.textPrimary,
+    flex: 1,
   },
   commentTime: {
-    fontSize: Typography.xs,
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
     color: Colors.textMuted,
+    letterSpacing: Type.tracking.caption,
   },
-  commentMoreIcon: {
-    fontSize: Typography.md,
-    color: Colors.textMuted,
-    letterSpacing: 1,
+  commentReport: {
+    paddingLeft: Space.xs,
   },
   commentText: {
-    fontSize: Typography.sm,
+    fontSize: Type.size.body,
     color: Colors.textPrimary,
-    lineHeight: 20,
-    paddingLeft: 28 + Spacing.sm,
+    lineHeight: Type.leading.body,
   },
-  inputBar: {
+  dotRow: {
+    flexDirection: 'row',
+    gap: 3,
+  },
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.textMuted,
+  },
+
+  // ── Reply bar ─────────────────────────────────────
+  replyBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
+    paddingHorizontal: Space.md,
+    paddingTop: Space.sm,
+    gap: Space.sm,
     backgroundColor: Colors.surface,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  inputAvatar: {
-    width: 30,
-    height: 30,
+  replyInput: {
+    flex: 1,
+    backgroundColor: Colors.inputBg,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Space.md,
+    paddingVertical: Space.sm,
+    fontSize: Type.size.body,
+    color: Colors.textPrimary,
+    maxHeight: 100,
+    lineHeight: Type.leading.body,
+  },
+  sendBtn: {
+    width: 36,
+    height: 36,
     borderRadius: Radius.full,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  inputAvatarInitial: {
-    color: Colors.white,
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: Colors.surfaceAlt,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
-    fontSize: Typography.sm,
-    color: Colors.textPrimary,
-    maxHeight: 100,
-  },
-  sendBtn: {
-    backgroundColor: Colors.maroon,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.full,
-  },
   sendBtnDisabled: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
   sendBtnText: {
     color: Colors.white,
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontSize: 18,
+    fontWeight: Type.weight.bold,
+    lineHeight: 22,
   },
 });

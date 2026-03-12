@@ -1,32 +1,32 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ScrollView, Alert, Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors, Typography, Spacing, Radius } from '../theme';
+import Avatar from '../components/Avatar';
+import Button from '../components/Button';
+import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { CHANNELS } from '../types';
 import type { Channel } from '../types';
 import { MOCK_IDENTITIES } from '../services/mockData';
 
+const MAX_CHARS = 500;
+
 export default function CreatePostScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [channel, setChannel] = useState<Channel>('general');
   const [text, setText] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const activeIdentity = MOCK_IDENTITIES[0];
-  const MAX_CHARS = 500;
+  const remaining = MAX_CHARS - text.length;
+  const canPost = text.trim().length > 0 && text.length <= MAX_CHARS;
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -34,17 +34,14 @@ export default function CreatePostScreen() {
       Alert.alert('Permission needed', 'Allow photo access to attach an image.');
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.85,
     });
-
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
-      // Rough size check: ~5MB max (fileSize is in bytes, may not always be present)
       if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
         Alert.alert('Image too large', 'Please choose an image under 5MB.');
         return;
@@ -53,248 +50,236 @@ export default function CreatePostScreen() {
     }
   }
 
-  function removeImage() {
-    setImageUri(null);
-  }
-
   async function handlePost() {
-    if (!text.trim()) {
-      Alert.alert('Empty post', 'Write something before posting.');
-      return;
-    }
+    if (!canPost) return;
     setLoading(true);
-    // TODO: replace with Supabase insert
-    await new Promise((res) => setTimeout(res, 600)); // simulate network
+    await new Promise(r => setTimeout(r, 700)); // TODO: Supabase insert
     setLoading(false);
-    Alert.alert('Posted!', 'Your post has been submitted.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    navigation.goBack();
   }
-
-  const canPost = text.trim().length > 0 && text.length <= MAX_CHARS;
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      style={styles.root}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Space.xxl }]}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
-      {/* Active identity display */}
+
+      {/* ── Identity row ──────────────────────────── */}
       <View style={styles.identityRow}>
-        <View style={[styles.avatar, { backgroundColor: activeIdentity.avatarColor }]}>
-          <Text style={styles.avatarInitial}>{activeIdentity.displayName[0]}</Text>
+        <Avatar displayName={activeIdentity.displayName} size={48} />
+        <View>
+          <Text style={styles.identityLabel}>Posting as</Text>
+          <Text style={styles.identityName}>{activeIdentity.displayName}</Text>
         </View>
-        <Text style={styles.identityName}>{activeIdentity.displayName}</Text>
       </View>
 
-      {/* Channel selector */}
-      <Text style={styles.sectionLabel}>Channel</Text>
-      <View style={styles.channelRow}>
-        {CHANNELS.map((ch) => {
-          const isActive = ch.id === channel;
-          return (
-            <TouchableOpacity
-              key={ch.id}
-              onPress={() => setChannel(ch.id)}
-              style={[styles.channelChip, isActive && styles.channelChipActive]}
-            >
-              <Text style={[styles.channelChipLabel, isActive && styles.channelChipLabelActive]}>
-                {ch.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+      {/* ── Channel selector ──────────────────────── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Channel</Text>
+        <View style={styles.channelRow}>
+          {CHANNELS.map(ch => {
+            const active = ch.id === channel;
+            return (
+              <TouchableOpacity
+                key={ch.id}
+                onPress={() => setChannel(ch.id)}
+                style={[styles.channelChip, active && styles.channelChipActive]}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.channelChipLabel, active && styles.channelChipLabelActive]}>
+                  {ch.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
-      {/* Text input */}
-      <Text style={styles.sectionLabel}>Post</Text>
-      <TextInput
-        style={styles.textInput}
-        placeholder="What's the tea?"
-        placeholderTextColor={Colors.textMuted}
-        value={text}
-        onChangeText={setText}
-        multiline
-        maxLength={MAX_CHARS}
-        textAlignVertical="top"
-      />
-      <Text style={styles.charCount}>
-        {text.length} / {MAX_CHARS}
-      </Text>
+      {/* ── Compose ───────────────────────────────── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Post</Text>
+        <TextInput
+          style={styles.compose}
+          placeholder="What's the tea?"
+          placeholderTextColor={Colors.textMuted}
+          value={text}
+          onChangeText={setText}
+          multiline
+          textAlignVertical="top"
+          maxLength={MAX_CHARS}
+        />
+        <Text style={[styles.charCount, remaining < 50 && styles.charCountWarn]}>
+          {remaining}
+        </Text>
+      </View>
 
-      {/* Photo section */}
+      {/* ── Photo ─────────────────────────────────── */}
       {imageUri ? (
-        <View style={styles.imagePreviewWrapper}>
+        <View style={styles.imagePreviewWrap}>
           <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
-          <TouchableOpacity style={styles.removeImageBtn} onPress={removeImage}>
-            <Text style={styles.removeImageText}>✕</Text>
+          <TouchableOpacity style={styles.removeImageBtn} onPress={() => setImageUri(null)}>
+            <Text style={styles.removeImageText} allowFontScaling={false}>✕</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={styles.addPhotoBtn} onPress={pickImage}>
+        <TouchableOpacity style={styles.addPhotoBtn} onPress={pickImage} activeOpacity={0.7}>
           <Text style={styles.addPhotoIcon}>📷</Text>
           <Text style={styles.addPhotoLabel}>Add Photo</Text>
         </TouchableOpacity>
       )}
 
-      {/* Submit */}
-      <TouchableOpacity
-        style={[styles.postBtn, (!canPost || loading) && styles.postBtnDisabled]}
+      {/* ── Submit ────────────────────────────────── */}
+      <Button
+        label="Post Anonymously"
         onPress={handlePost}
-        disabled={!canPost || loading}
-      >
-        {loading ? (
-          <ActivityIndicator color={Colors.white} />
-        ) : (
-          <Text style={styles.postBtnText}>Post Anonymously</Text>
-        )}
-      </TouchableOpacity>
+        disabled={!canPost}
+        loading={loading}
+      />
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: Colors.background,
   },
   content: {
-    padding: Spacing.base,
-    paddingBottom: Spacing.xxxl,
+    padding: Space.md,
+    gap: Space.lg,
   },
+
+  // ── Identity ──────────────────────────────────
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    gap: Spacing.sm,
+    gap: Space.md,
+    paddingVertical: Space.sm,
   },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: Radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarInitial: {
-    color: Colors.white,
-    fontSize: Typography.base,
-    fontWeight: Typography.bold,
+  identityLabel: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.semibold,
+    color: Colors.textMuted,
+    letterSpacing: Type.tracking.label,
+    textTransform: 'uppercase',
   },
   identityName: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: Type.size.body,
+    fontWeight: Type.weight.semibold,
     color: Colors.textPrimary,
   },
-  sectionLabel: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.semibold,
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: Spacing.sm,
+
+  // ── Section ───────────────────────────────────
+  section: {
+    gap: Space.sm,
   },
+  sectionLabel: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.semibold,
+    color: Colors.textMuted,
+    letterSpacing: Type.tracking.label,
+    textTransform: 'uppercase',
+  },
+
+  // ── Channel chips ─────────────────────────────
   channelRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
+    gap: Space.sm,
   },
   channelChip: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    paddingVertical: Space.xs + 2,
+    paddingHorizontal: Space.md,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.border,
+    borderWidth: 1.5,
+    borderColor: Colors.transparent,
   },
   channelChipActive: {
-    backgroundColor: Colors.maroon,
-    borderColor: Colors.maroon,
+    backgroundColor: Colors.primaryFaint,
+    borderColor: Colors.primary,
   },
   channelChipLabel: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.medium,
+    fontSize: Type.size.label,
+    fontWeight: Type.weight.semibold,
+    color: Colors.textMuted,
+    letterSpacing: Type.tracking.caption,
   },
   channelChipLabelActive: {
-    color: Colors.white,
-    fontWeight: Typography.semibold,
+    color: Colors.primary,
   },
-  textInput: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
-    fontSize: Typography.base,
+
+  // ── Compose textarea ──────────────────────────
+  compose: {
+    backgroundColor: Colors.inputBg,
+    borderRadius: Radius.sm,
+    padding: Space.md,
+    fontSize: Type.size.body,
     color: Colors.textPrimary,
-    minHeight: 120,
-    lineHeight: 22,
+    lineHeight: Type.leading.body,
+    minHeight: 100,
+    maxHeight: 300,
+    borderWidth: 2,
+    borderColor: Colors.transparent,
   },
   charCount: {
-    fontSize: Typography.xs,
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
     color: Colors.textMuted,
     textAlign: 'right',
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.base,
+    letterSpacing: Type.tracking.caption,
   },
+  charCountWarn: {
+    color: Colors.error,
+  },
+
+  // ── Image ─────────────────────────────────────
   addPhotoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
+    gap: Space.sm,
+    height: 52,
+    borderRadius: Radius.sm,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    borderRadius: Radius.lg,
     borderStyle: 'dashed',
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
   },
   addPhotoIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   addPhotoLabel: {
-    fontSize: Typography.base,
-    color: Colors.textSecondary,
-    fontWeight: Typography.medium,
+    fontSize: Type.size.body,
+    color: Colors.textMuted,
+    fontWeight: Type.weight.medium,
   },
-  imagePreviewWrapper: {
+  imagePreviewWrap: {
     position: 'relative',
-    marginBottom: Spacing.lg,
+    borderRadius: Radius.md,
+    overflow: 'hidden',
+    ...Elevation.card,
   },
   imagePreview: {
     width: '100%',
-    height: 200,
-    borderRadius: Radius.lg,
+    aspectRatio: 4 / 3,
   },
   removeImageBtn: {
     position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    top: Space.sm,
+    right: Space.sm,
     width: 28,
     height: 28,
     borderRadius: Radius.full,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   removeImageText: {
     color: Colors.white,
-    fontSize: 13,
-    fontWeight: Typography.bold,
-  },
-  postBtn: {
-    backgroundColor: Colors.maroon,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.lg,
-    alignItems: 'center',
-  },
-  postBtnDisabled: {
-    opacity: 0.45,
-  },
-  postBtnText: {
-    color: Colors.white,
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: 12,
+    fontWeight: Type.weight.bold,
   },
 });

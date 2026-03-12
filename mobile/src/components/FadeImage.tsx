@@ -4,31 +4,26 @@ import { Colors } from '../theme';
 
 interface Props {
   uri: string;
-  /**
-   * Width divided by height. Default is 4/3.
-   * 1     = square (Instagram-style)
-   * 4/3   = portrait-ish (default — works well for campus photos)
-   * 16/9  = wide landscape
-   */
   aspectRatio?: number;
-  borderRadius?: number;
 }
 
-export default function FadeImage({ uri, aspectRatio = 4 / 3, borderRadius = 0 }: Props) {
+// Image container enforces a fixed aspect ratio so every photo renders at the
+// same proportions regardless of the original file dimensions.
+// The image fades in once loaded — no jarring pop-in.
+export default function FadeImage({ uri, aspectRatio = 4 / 3 }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
 
   function handleLoad() {
     Animated.timing(opacity, {
       toValue: 1,
-      duration: 280,
+      duration: 260,
       useNativeDriver: true,
     }).start();
   }
 
   return (
-    <View style={[styles.container, { aspectRatio, borderRadius }]}>
-      {/* Placeholder visible while the image loads */}
-      <View style={[StyleSheet.absoluteFill, styles.placeholder]} />
+    <View style={[styles.container, { aspectRatio }]}>
+      <View style={StyleSheet.absoluteFill} />
       <Animated.Image
         source={{ uri }}
         style={[StyleSheet.absoluteFill, { opacity }]}
@@ -43,9 +38,6 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceAlt,
-  },
-  placeholder: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: Colors.border,
   },
 });

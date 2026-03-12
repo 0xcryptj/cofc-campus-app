@@ -8,8 +8,9 @@ import {
   Animated,
   Alert,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../theme';
+import Avatar from './Avatar';
 import FadeImage from './FadeImage';
+import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { timeAgo } from '../utils/timeAgo';
 import { logReport } from '../services/moderationService';
 import type { Post } from '../types';
@@ -24,115 +25,105 @@ interface Props {
 export default function PostCard({ post, onPress, onUpvote, activeIdentityId }: Props) {
   const upvoteScale = useRef(new Animated.Value(1)).current;
 
-  function handleUpvoteTap() {
+  function handleUpvote() {
     Animated.sequence([
       Animated.spring(upvoteScale, {
-        toValue: 1.45,
+        toValue: 1.5,
+        damping: 10,
+        stiffness: 200,
         useNativeDriver: true,
-        speed: 40,
-        bounciness: 14,
       }),
       Animated.spring(upvoteScale, {
         toValue: 1,
+        damping: 10,
+        stiffness: 200,
         useNativeDriver: true,
-        speed: 20,
-        bounciness: 6,
       }),
     ]).start();
     onUpvote(post.id);
   }
 
   function handleReport() {
-    Alert.alert('Report Post', 'Why are you reporting this?', [
-      {
-        text: 'Spam',
-        onPress: () =>
-          logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'spam' }),
-      },
-      {
-        text: 'Harassment',
-        onPress: () =>
-          logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'harassment' }),
-      },
-      {
-        text: 'Inappropriate',
-        onPress: () =>
-          logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'inappropriate' }),
-      },
+    Alert.alert('Report Post', 'What is the issue?', [
+      { text: 'Spam', onPress: () => logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'spam' }) },
+      { text: 'Harassment', onPress: () => logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'harassment' }) },
+      { text: 'Inappropriate', onPress: () => logReport({ reporterId: activeIdentityId, contentId: post.id, contentType: 'post', reason: 'inappropriate' }) },
       { text: 'Cancel', style: 'cancel' },
     ]);
   }
 
   return (
-    // Outer press target for navigating to detail
     <TouchableWithoutFeedback onPress={onPress}>
       <View style={styles.card}>
 
-        {/* ── Header ────────────────────────────────────── */}
-        <View style={styles.header}>
-          <View style={[styles.avatar, { backgroundColor: post.anonAvatarColor }]}>
-            <Text style={styles.avatarInitial} allowFontScaling={false}>
-              {post.anonDisplayName[0]}
-            </Text>
-          </View>
-
-          <View style={styles.headerMeta}>
-            <Text style={styles.displayName} numberOfLines={1}>
-              {post.anonDisplayName}
-            </Text>
-            <Text style={styles.timestamp}>{timeAgo(post.createdAt)}</Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={handleReport}
-            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
-            style={styles.moreBtn}
-          >
-            <View style={styles.moreDot} />
-            <View style={styles.moreDot} />
-            <View style={styles.moreDot} />
-          </TouchableOpacity>
-        </View>
+        {/* ── Image — bleeds edge-to-edge at top ───────── */}
+        {post.imageUri ? <FadeImage uri={post.imageUri} aspectRatio={4 / 3} /> : null}
 
         {/* ── Body text ─────────────────────────────────── */}
-        <Text style={styles.body}>{post.textBody}</Text>
-
-        {/* ── Image (bleeds edge-to-edge inside the card) ─ */}
-        {post.imageUri ? (
-          <View style={styles.imageWrapper}>
-            <FadeImage uri={post.imageUri} aspectRatio={4 / 3} />
-          </View>
-        ) : null}
-
-        {/* ── Footer actions ────────────────────────────── */}
-        <View style={styles.footer}>
-          {/* Upvote */}
-          <TouchableOpacity
-            onPress={handleUpvoteTap}
-            activeOpacity={0.75}
-            style={styles.action}
-          >
-            <Animated.View style={{ transform: [{ scale: upvoteScale }] }}>
-              <View style={[styles.upvoteIcon, post.upvotedByMe && styles.upvoteIconActive]}>
-                <Text style={[styles.upvoteChevron, post.upvotedByMe && styles.upvoteChevronActive]}>
-                  ▲
-                </Text>
-              </View>
-            </Animated.View>
-            <Text style={[styles.actionCount, post.upvotedByMe && styles.actionCountActive]}>
-              {post.upvoteCount}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Comments */}
-          <View style={styles.action}>
-            <View style={styles.commentIcon}>
-              <Text style={styles.commentChevron}>◯</Text>
-            </View>
-            <Text style={styles.actionCount}>{post.commentCount}</Text>
-          </View>
+        <View style={styles.body}>
+          <Text style={styles.bodyText}>{post.textBody}</Text>
         </View>
 
+        {/* ── Footer ────────────────────────────────────── */}
+        <View style={styles.footer}>
+
+          {/* Left — identity */}
+          <View style={styles.footerLeft}>
+            <Avatar displayName={post.anonDisplayName} size={36} />
+            <View style={styles.meta}>
+              <Text style={styles.displayName} numberOfLines={1}>
+                {post.anonDisplayName}
+              </Text>
+              <Text style={styles.timestamp}>{timeAgo(post.createdAt)}</Text>
+            </View>
+          </View>
+
+          {/* Right — actions */}
+          <View style={styles.actions}>
+
+            {/* Upvote */}
+            <TouchableOpacity onPress={handleUpvote} activeOpacity={0.7} style={styles.action}>
+              <Animated.Text
+                style={[
+                  styles.actionIcon,
+                  post.upvotedByMe && styles.upvoteActive,
+                  { transform: [{ scale: upvoteScale }] },
+                ]}
+                allowFontScaling={false}
+              >
+                ▲
+              </Animated.Text>
+              <Text style={[styles.actionCount, post.upvotedByMe && styles.upvoteActiveCount]}>
+                {post.upvoteCount}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Comment */}
+            <View style={styles.action}>
+              <Text style={styles.actionIcon} allowFontScaling={false}>◯</Text>
+              <Text style={styles.actionCount}>{post.commentCount}</Text>
+            </View>
+
+            {/* Share — stub */}
+            <View style={styles.action}>
+              <Text style={styles.actionIcon} allowFontScaling={false}>↗</Text>
+              <Text style={styles.actionCount}>{post.shareCount}</Text>
+            </View>
+
+            {/* Report */}
+            <TouchableOpacity
+              onPress={handleReport}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+            >
+              <View style={styles.dotsRow}>
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+              </View>
+            </TouchableOpacity>
+
+          </View>
+        </View>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -141,134 +132,102 @@ export default function PostCard({ post, onPress, onUpvote, activeIdentityId }: 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    marginHorizontal: Spacing.base,
-    marginBottom: Spacing.md,
-    overflow: 'hidden',  // clips image to card corners — critical
-    ...Shadow.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginHorizontal: Space.md,
+    marginBottom: Space.sm,
+    overflow: 'hidden',
+    ...Elevation.card,
   },
 
-  // ── Header ─────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-  },
-  avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-  },
-  avatarInitial: {
-    color: Colors.white,
-    fontSize: 13,
-    fontWeight: Typography.bold,
-    letterSpacing: 0.2,
-  },
-  headerMeta: {
-    flex: 1,
-    gap: 1,
-  },
-  displayName: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.textPrimary,
-    letterSpacing: Typography.tightTracking,
-  },
-  timestamp: {
-    fontSize: Typography.xs,
-    color: Colors.textMuted,
-    fontWeight: Typography.regular,
-  },
-  moreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingLeft: Spacing.sm,
-  },
-  moreDot: {
-    width: 3,
-    height: 3,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.textMuted,
-  },
-
-  // ── Body ────────────────────────────────────────────
+  // ── Body ────────────────────────────────────────
   body: {
-    fontSize: Typography.base,
+    paddingHorizontal: Space.md,
+    paddingTop: Space.md,
+    paddingBottom: Space.sm,
+  },
+  bodyText: {
+    fontSize: Type.size.body,
+    fontWeight: Type.weight.regular,
     color: Colors.textPrimary,
-    lineHeight: Typography.lineHeightBase,
-    paddingHorizontal: Spacing.base,
-    paddingBottom: Spacing.md,
-    letterSpacing: Typography.normalTracking,
+    lineHeight: Type.leading.body,
   },
 
-  // ── Image ───────────────────────────────────────────
-  imageWrapper: {
-    // No padding — FadeImage fills the card width edge to edge.
-    // The card's overflow:hidden clips it to the border radius.
-  },
-
-  // ── Footer ──────────────────────────────────────────
+  // ── Footer ──────────────────────────────────────
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm + 2,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.divider,
-    gap: Spacing.lg,
+    justifyContent: 'space-between',
+    paddingHorizontal: Space.md,
+    paddingVertical: Space.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Space.sm,
+    flex: 1,
+    minWidth: 0,
+  },
+  meta: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  displayName: {
+    fontSize: Type.size.label,
+    fontWeight: Type.weight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: 0,
+  },
+  timestamp: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
+    color: Colors.textMuted,
+    letterSpacing: Type.tracking.caption,
+  },
+
+  // ── Actions ─────────────────────────────────────
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Space.md,
   },
   action: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
-  upvoteIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surfaceAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  upvoteIconActive: {
-    backgroundColor: Colors.maroonFaint,
-  },
-  upvoteChevron: {
-    fontSize: 10,
+  actionIcon: {
+    fontSize: 12,
     color: Colors.textMuted,
-    lineHeight: 12,
-  },
-  upvoteChevronActive: {
-    color: Colors.maroon,
-  },
-  commentIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surfaceAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  commentChevron: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    lineHeight: 14,
+    lineHeight: 16,
   },
   actionCount: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    color: Colors.textSecondary,
-    minWidth: 16,
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
+    color: Colors.textMuted,
+    letterSpacing: Type.tracking.caption,
+    minWidth: 14,
   },
-  actionCountActive: {
-    color: Colors.maroon,
-    fontWeight: Typography.semibold,
+  upvoteActive: {
+    color: Colors.success,
+  },
+  upvoteActiveCount: {
+    color: Colors.success,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 3,
+    alignItems: 'center',
+    paddingLeft: Space.xs,
+  },
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.textMuted,
   },
 });

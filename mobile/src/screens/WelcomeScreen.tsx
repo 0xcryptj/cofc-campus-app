@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-import { Colors, Typography, Spacing, Radius } from '../theme';
+import { Colors, Type, Space, Radius } from '../theme';
+import Button from '../components/Button';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
@@ -10,84 +11,77 @@ type Props = {
 
 export default function WelcomeScreen({ navigation }: Props) {
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
+    <View style={styles.root}>
+      <SafeAreaView style={styles.safe}>
+
+        {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.logo}>🍵</Text>
-          <Text style={styles.title}>Charleston Tea</Text>
+          <Text style={styles.appName} allowFontScaling={false}>
+            Charleston{'\n'}Tea
+          </Text>
           <Text style={styles.tagline}>
-            The anonymous campus feed for{'\n'}College of Charleston students.
+            The anonymous campus feed{'\n'}for CofC students.
           </Text>
         </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.primaryBtn}
+        {/* CTA */}
+        <View style={styles.cta}>
+          {/* White button on the maroon background */}
+          <Button
+            label="Get Started"
             onPress={() => navigation.navigate('SignUp')}
-          >
-            <Text style={styles.primaryBtnText}>Get Started with CofC Email</Text>
-          </TouchableOpacity>
+            variant="inverse"
+            fullWidth
+          />
           <Text style={styles.disclaimer}>
-            Only verified @g.cofc.edu addresses are allowed.{'\n'}
-            You post anonymously. We keep records privately for safety.
+            Requires a verified @g.cofc.edu email.{'\n'}
+            Posts are public and anonymous. Records are kept privately for safety.
           </Text>
         </View>
-      </View>
-    </SafeAreaView>
+
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+  },
   safe: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  container: {
-    flex: 1,
     justifyContent: 'space-between',
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
+    paddingHorizontal: Space.lg,
+    paddingBottom: Space.xxl,
   },
   hero: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    gap: Space.md,
   },
-  logo: {
-    fontSize: 64,
-    marginBottom: Spacing.lg,
-  },
-  title: {
-    fontSize: Typography.xxl,
-    fontWeight: Typography.bold,
-    color: Colors.maroon,
-    marginBottom: Spacing.md,
-    textAlign: 'center',
+  appName: {
+    fontSize: Type.size.screen,
+    fontWeight: Type.weight.bold,
+    color: Colors.white,
+    letterSpacing: Type.tracking.tightest,
+    lineHeight: 40,
   },
   tagline: {
-    fontSize: Typography.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 26,
+    fontSize: Type.size.body,
+    fontWeight: Type.weight.regular,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: Type.leading.body,
   },
-  actions: {
-    gap: Spacing.base,
-  },
-  primaryBtn: {
-    backgroundColor: Colors.maroon,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.lg,
-    alignItems: 'center',
-  },
-  primaryBtnText: {
-    color: Colors.white,
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+  cta: {
+    gap: Space.md,
   },
   disclaimer: {
-    fontSize: Typography.xs,
-    color: Colors.textMuted,
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
+    color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 16,
+    letterSpacing: Type.tracking.caption,
   },
 });

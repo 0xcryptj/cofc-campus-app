@@ -9,7 +9,7 @@ import MainTabs from './MainTabs';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 
-import { Colors, Typography } from '../theme';
+import { Colors, Type } from '../theme';
 import type { Post } from '../types';
 
 export type RootStackParamList = {
@@ -29,30 +29,29 @@ export default function RootNavigator() {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          // Crisp, fast slide — matches iOS system behavior
           animation: 'slide_from_right',
-          animationDuration: 320,
+          animationDuration: 300,
           gestureEnabled: true,
-          fullScreenGestureEnabled: true, // swipe from anywhere to go back
+          fullScreenGestureEnabled: true,
         }}
       >
-        {/* ── Auth flow ─────────────────────────────────── */}
+        {/* Auth */}
         <Stack.Screen
           name="Welcome"
           component={WelcomeScreen}
-          options={{ animation: 'fade' }}  // no slide on first load
+          options={{ animation: 'fade', animationDuration: 350 }}
         />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
 
-        {/* ── Main app ──────────────────────────────────── */}
+        {/* App */}
         <Stack.Screen
           name="Main"
           component={MainTabs}
-          options={{ animation: 'fade' }}  // clean fade into the app
+          options={{ animation: 'fade', animationDuration: 350 }}
         />
 
-        {/* ── Post detail (slides in from right) ────────── */}
+        {/* PostDetail — slides from right over tabs */}
         <Stack.Screen
           name="PostDetail"
           component={PostDetailScreen}
@@ -62,31 +61,31 @@ export default function RootNavigator() {
             headerBackTitle: 'Feed',
             headerShadowVisible: false,
             headerStyle: { backgroundColor: Colors.background },
-            headerTintColor: Colors.maroon,
+            headerTintColor: Colors.primary,
             headerTitleStyle: {
-              fontSize: Typography.md,
-              fontWeight: Typography.semibold,
+              fontSize: Type.size.body,
+              fontWeight: Type.weight.semibold,
               color: Colors.textPrimary,
             },
           }}
         />
 
-        {/* ── Create post (slides up as modal) ──────────── */}
+        {/* CreatePost — native iOS form sheet with drag handle */}
         <Stack.Screen
           name="CreatePost"
           component={CreatePostScreen}
           options={{
-            presentation: 'formSheet',   // native iOS sheet with handle bar
+            presentation: 'formSheet',
             headerShown: true,
             title: 'New Post',
             headerShadowVisible: false,
             headerStyle: { backgroundColor: Colors.background },
+            headerTintColor: Colors.primary,
             headerTitleStyle: {
-              fontSize: Typography.md,
-              fontWeight: Typography.semibold,
+              fontSize: Type.size.body,
+              fontWeight: Type.weight.semibold,
               color: Colors.textPrimary,
             },
-            headerTintColor: Colors.maroon,
           }}
         />
       </Stack.Navigator>

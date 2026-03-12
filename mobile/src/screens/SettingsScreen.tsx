@@ -1,41 +1,79 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import { Colors, Typography, Spacing, Radius, Shadow } from '../theme';
+import {
+  View, Text, StyleSheet, SafeAreaView,
+  TouchableOpacity, ScrollView,
+} from 'react-native';
+import { Colors, Type, Space, Radius, Elevation } from '../theme';
+
+interface RowProps {
+  label: string;
+  value?: string;
+  destructive?: boolean;
+  onPress?: () => void;
+}
+
+function Row({ label, value, destructive, onPress }: RowProps) {
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <Text style={[styles.rowLabel, destructive && styles.rowLabelDestructive]}>
+        {label}
+      </Text>
+      {value ? <Text style={styles.rowValue}>{value}</Text> : null}
+      {onPress && !value ? <Text style={styles.rowArrow}>›</Text> : null}
+    </TouchableOpacity>
+  );
+}
 
 export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Settings</Text>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Account</Text>
-        <TouchableOpacity style={styles.row}>
-          <Text style={styles.rowLabel}>Sign Out</Text>
-          <Text style={styles.rowArrow}>→</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.row}>
-          <Text style={[styles.rowLabel, { color: Colors.error }]}>Delete Account</Text>
-          <Text style={styles.rowArrow}>→</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>About</Text>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>Version</Text>
-          <Text style={styles.rowValue}>1.0.0</Text>
+        {/* Account */}
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>Account</Text>
+          <View style={styles.card}>
+            <Row label="Sign Out" onPress={() => {}} />
+            <View style={styles.divider} />
+            <Row label="Delete Account" destructive onPress={() => {}} />
+          </View>
         </View>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>Only for CofC students</Text>
-        </View>
-      </View>
 
-      <Text style={styles.footer}>
-        Charleston Tea · Anonymous campus social{'\n'}
-        Posts are anonymous publicly. User records are stored privately for moderation.
-      </Text>
+        {/* App info */}
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>About</Text>
+          <View style={styles.card}>
+            <Row label="Version" value="1.0.0" />
+            <View style={styles.divider} />
+            <Row label="Only for @g.cofc.edu students" />
+          </View>
+        </View>
+
+        {/* Legal */}
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>Legal</Text>
+          <View style={styles.card}>
+            <Row label="Privacy Policy" onPress={() => {}} />
+            <View style={styles.divider} />
+            <Row label="Terms of Service" onPress={() => {}} />
+          </View>
+        </View>
+
+        <Text style={styles.footer}>
+          Charleston Tea · v1.0.0{'\n'}
+          Posts are anonymous publicly. User records are stored privately for moderation and safety.
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -45,62 +83,80 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    padding: Spacing.base,
-    paddingTop: Spacing.xl,
-    marginBottom: Spacing.sm,
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    padding: Space.md,
+    gap: Space.lg,
+    paddingBottom: Space.xxl,
   },
   title: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.maroon,
+    fontSize: Type.size.section,
+    fontWeight: Type.weight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: Type.tracking.tight,
+    paddingVertical: Space.sm,
   },
-  section: {
-    marginHorizontal: Spacing.base,
-    marginBottom: Spacing.lg,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    ...Shadow.sm,
+
+  // ── Group ─────────────────────────────────────
+  group: {
+    gap: Space.sm,
   },
-  sectionLabel: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.semibold,
+  groupLabel: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.semibold,
     color: Colors.textMuted,
+    letterSpacing: Type.tracking.label,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xs,
+    paddingHorizontal: Space.xs,
   },
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+    ...Elevation.card,
+  },
+
+  // ── Row ───────────────────────────────────────
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    paddingHorizontal: Space.md,
+    paddingVertical: Space.md,
   },
   rowLabel: {
-    fontSize: Typography.base,
+    fontSize: Type.size.body,
     color: Colors.textPrimary,
   },
+  rowLabelDestructive: {
+    color: Colors.error,
+  },
   rowValue: {
-    fontSize: Typography.base,
+    fontSize: Type.size.body,
     color: Colors.textMuted,
   },
   rowArrow: {
-    fontSize: Typography.base,
+    fontSize: 18,
     color: Colors.textMuted,
+    lineHeight: 22,
   },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginHorizontal: Space.md,
+  },
+
+  // ── Footer ────────────────────────────────────
   footer: {
-    fontSize: Typography.xs,
+    fontSize: Type.size.caption,
     color: Colors.textMuted,
     textAlign: 'center',
-    paddingHorizontal: Spacing.xl,
     lineHeight: 18,
-    marginTop: 'auto',
-    paddingBottom: Spacing.xl,
+    letterSpacing: Type.tracking.caption,
+    paddingTop: Space.sm,
   },
 });

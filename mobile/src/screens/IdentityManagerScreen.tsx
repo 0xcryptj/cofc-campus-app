@@ -1,47 +1,41 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  Alert,
+  View, Text, TouchableOpacity, StyleSheet,
+  SafeAreaView, Alert, ScrollView,
 } from 'react-native';
-
-import { Colors, Typography, Spacing, Radius, Shadow } from '../theme';
+import Avatar from '../components/Avatar';
+import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { generateIdentity } from '../utils/generateIdentity';
 import { MOCK_IDENTITIES } from '../services/mockData';
 import type { AnonIdentity } from '../types';
 
-const MAX_IDENTITIES = 3;
+const MAX = 3;
 
 export default function IdentityManagerScreen() {
   const [identities, setIdentities] = useState<AnonIdentity[]>(MOCK_IDENTITIES);
-  const [activeId, setActiveId] = useState<string>(MOCK_IDENTITIES[0].id);
+  const [activeId, setActiveId] = useState(MOCK_IDENTITIES[0].id);
 
-  function createIdentity() {
-    if (identities.length >= MAX_IDENTITIES) {
-      Alert.alert('Limit reached', `You can have up to ${MAX_IDENTITIES} identities.`);
+  function create() {
+    if (identities.length >= MAX) {
+      Alert.alert('Limit reached', `You can hold up to ${MAX} identities.`);
       return;
     }
-    const newIdentity = generateIdentity();
-    setIdentities((prev) => [...prev, newIdentity]);
+    setIdentities(prev => [...prev, generateIdentity()]);
   }
 
-  function deleteIdentity(id: string) {
+  function remove(id: string) {
     if (identities.length === 1) {
       Alert.alert('Cannot delete', 'You must keep at least one identity.');
       return;
     }
     Alert.alert('Delete identity?', 'This cannot be undone.', [
       {
-        text: 'Delete',
-        style: 'destructive',
+        text: 'Delete', style: 'destructive',
         onPress: () => {
-          setIdentities((prev) => prev.filter((i) => i.id !== id));
+          setIdentities(prev => prev.filter(i => i.id !== id));
           if (activeId === id) {
-            const remaining = identities.filter((i) => i.id !== id);
-            if (remaining.length > 0) setActiveId(remaining[0].id);
+            const rest = identities.filter(i => i.id !== id);
+            if (rest.length) setActiveId(rest[0].id);
           }
         },
       },
@@ -51,56 +45,73 @@ export default function IdentityManagerScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Identities</Text>
-        <Text style={styles.subtitle}>
-          You can have up to {MAX_IDENTITIES} anonymous identities. Switch between them freely.
-        </Text>
-      </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
 
-      <View style={styles.list}>
-        {identities.map((identity) => {
-          const isActive = identity.id === activeId;
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Identities</Text>
+          <Text style={styles.subtitle}>
+            Up to {MAX} anonymous identities. Other users only see the display name — never your account.
+          </Text>
+        </View>
+
+        {/* Identity cards */}
+        {identities.map(identity => {
+          const active = identity.id === activeId;
           return (
-            <View key={identity.id} style={[styles.card, isActive && styles.cardActive]}>
-              <TouchableOpacity
-                style={styles.cardMain}
-                onPress={() => setActiveId(identity.id)}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.avatar, { backgroundColor: identity.avatarColor }]}>
-                  <Text style={styles.avatarInitial}>{identity.displayName[0]}</Text>
-                </View>
+            <TouchableOpacity
+              key={identity.id}
+              style={[styles.card, active && styles.cardActive]}
+              onPress={() => setActiveId(identity.id)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.cardLeft}>
+                <Avatar displayName={identity.displayName} size={48} />
                 <View style={styles.cardText}>
-                  <Text style={styles.identityName}>{identity.displayName}</Text>
-                  <Text style={styles.identityStatus}>
-                    {isActive ? '✓ Active' : 'Tap to use'}
+                  <Text style={styles.cardName}>{identity.displayName}</Text>
+                  <Text style={styles.cardStatus}>
+                    {active ? 'Active identity' : 'Tap to switch'}
                   </Text>
                 </View>
-              </TouchableOpacity>
+              </View>
 
-              {!isActive && (
+              {active && (
+                <View style={styles.activeBadge}>
+                  <Text style={styles.activeBadgeText} allowFontScaling={false}>✓</Text>
+                </View>
+              )}
+
+              {!active && (
                 <TouchableOpacity
-                  onPress={() => deleteIdentity(identity.id)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => remove(identity.id)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                  <Text style={styles.deleteBtn}>Delete</Text>
+                  <Text style={styles.deleteText}>Delete</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           );
         })}
-      </View>
 
-      {identities.length < MAX_IDENTITIES && (
-        <TouchableOpacity style={styles.addBtn} onPress={createIdentity}>
-          <Text style={styles.addBtnText}>+ Create New Identity</Text>
-        </TouchableOpacity>
-      )}
+        {/* Add button */}
+        {identities.length < MAX && (
+          <TouchableOpacity style={styles.addBtn} onPress={create} activeOpacity={0.7}>
+            <Text style={styles.addBtnIcon} allowFontScaling={false}>+</Text>
+            <Text style={styles.addBtnLabel}>New Identity</Text>
+          </TouchableOpacity>
+        )}
 
-      <Text style={styles.note}>
-        Identities are anonymous to other users. Your account is stored privately for safety.
-      </Text>
+        {/* Privacy note */}
+        <Text style={styles.note}>
+          All posts are publicly anonymous. Your real account is stored privately to
+          enable moderation and safety review if needed.
+        </Text>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -110,97 +121,118 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    padding: Space.md,
+    gap: Space.md,
+    paddingBottom: Space.xxl,
+  },
+
+  // ── Header ──────────────────────────────────────
   header: {
-    padding: Spacing.base,
-    paddingTop: Spacing.xl,
-    marginBottom: Spacing.base,
+    paddingVertical: Space.sm,
+    gap: Space.xs,
   },
   title: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.maroon,
-    marginBottom: Spacing.xs,
+    fontSize: Type.size.section,
+    fontWeight: Type.weight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: Type.tracking.tight,
   },
   subtitle: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    lineHeight: 20,
+    fontSize: Type.size.body,
+    color: Colors.textMuted,
+    lineHeight: Type.leading.body,
   },
-  list: {
-    paddingHorizontal: Spacing.base,
-    gap: Spacing.sm,
-  },
+
+  // ── Identity card ────────────────────────────────
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
+    borderRadius: Radius.md,
+    padding: Space.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: Colors.border,
-    ...Shadow.sm,
+    ...Elevation.card,
   },
   cardActive: {
-    borderColor: Colors.maroon,
+    borderColor: Colors.primary,
   },
-  cardMain: {
+  cardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: Spacing.md,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarInitial: {
-    color: Colors.white,
-    fontSize: Typography.md,
-    fontWeight: Typography.bold,
+    gap: Space.md,
   },
   cardText: {
     flex: 1,
+    gap: 2,
   },
-  identityName: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+  cardName: {
+    fontSize: Type.size.body,
+    fontWeight: Type.weight.semibold,
     color: Colors.textPrimary,
   },
-  identityStatus: {
-    fontSize: Typography.sm,
-    color: Colors.maroon,
-    marginTop: 2,
+  cardStatus: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
+    color: Colors.primary,
+    letterSpacing: Type.tracking.caption,
   },
-  deleteBtn: {
-    fontSize: Typography.sm,
-    color: Colors.error,
-    fontWeight: Typography.medium,
-    paddingLeft: Spacing.sm,
-  },
-  addBtn: {
-    margin: Spacing.base,
-    marginTop: Spacing.lg,
-    borderWidth: 1.5,
-    borderColor: Colors.maroon,
-    borderRadius: Radius.lg,
-    borderStyle: 'dashed',
-    paddingVertical: Spacing.md,
+  activeBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  addBtnText: {
-    color: Colors.maroon,
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+  activeBadgeText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: Type.weight.bold,
   },
+  deleteText: {
+    fontSize: Type.size.label,
+    color: Colors.error,
+    fontWeight: Type.weight.medium,
+  },
+
+  // ── Add button ──────────────────────────────────
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Space.sm,
+    height: 52,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed',
+  },
+  addBtnIcon: {
+    fontSize: 20,
+    color: Colors.primary,
+    fontWeight: Type.weight.regular,
+    lineHeight: 24,
+  },
+  addBtnLabel: {
+    fontSize: Type.size.body,
+    fontWeight: Type.weight.semibold,
+    color: Colors.primary,
+  },
+
+  // ── Note ─────────────────────────────────────────
   note: {
-    fontSize: Typography.xs,
+    fontSize: Type.size.caption,
     color: Colors.textMuted,
+    lineHeight: 16,
     textAlign: 'center',
-    paddingHorizontal: Spacing.xl,
-    marginTop: Spacing.lg,
-    lineHeight: 18,
+    letterSpacing: Type.tracking.caption,
+    paddingHorizontal: Space.md,
+    paddingTop: Space.sm,
   },
 });

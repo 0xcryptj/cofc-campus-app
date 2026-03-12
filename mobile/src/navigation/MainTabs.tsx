@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ChannelFeedScreen from '../screens/ChannelFeedScreen';
 import IdentityManagerScreen from '../screens/IdentityManagerScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import { Colors, Typography, Spacing } from '../theme';
+import { Colors, Type, Dim } from '../theme';
 
 export type MainTabParamList = {
   Feed: undefined;
@@ -15,69 +15,54 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// ─── Tab icon component ───────────────────────────────────────────────────────
-// Using simple Unicode glyphs for a clean, icon-library-free look.
-// Replace with SVG icons from the assets folder once custom assets are ready.
-
-const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
-  Feed:       { active: '⊟', inactive: '⊟' },
-  Identities: { active: '◈', inactive: '◈' },
-  Settings:   { active: '⊕', inactive: '⊕' },
+// Spec: no labels, just icons + 4px maroon dot under active icon.
+// Using clean Unicode glyphs until custom SVG assets are ready.
+const ICONS: Record<string, string> = {
+  Feed:       '⊟',
+  Identities: '◈',
+  Settings:   '⊕',
 };
 
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icon = TAB_ICONS[name];
   return (
-    <View style={tabIconStyles.wrapper}>
+    <View style={tabStyles.wrapper}>
       <Text
-        style={[
-          tabIconStyles.icon,
-          focused ? tabIconStyles.iconActive : tabIconStyles.iconInactive,
-        ]}
+        style={[tabStyles.icon, { color: focused ? Colors.primary : Colors.textMuted }]}
         allowFontScaling={false}
       >
-        {focused ? icon.active : icon.inactive}
+        {ICONS[name]}
       </Text>
-      {focused && <View style={tabIconStyles.dot} />}
+      {focused && <View style={tabStyles.dot} />}
     </View>
   );
 }
 
-const tabIconStyles = StyleSheet.create({
+const tabStyles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
+    paddingTop: 4,
   },
   icon: {
-    fontSize: 20,
+    fontSize: 21,
     lineHeight: 24,
-  },
-  iconActive: {
-    color: Colors.maroon,
-  },
-  iconInactive: {
-    color: Colors.textMuted,
   },
   dot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.maroon,
+    backgroundColor: Colors.primary,
   },
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarShowLabel: false,  // we show a dot indicator instead of label
+        tabBarShowLabel: false,
         tabBarStyle: styles.tabBar,
-        tabBarIcon: ({ focused }) => (
-          <TabIcon name={route.name} focused={focused} />
-        ),
+        tabBarIcon: ({ focused }) => <TabIcon name={route.name} focused={focused} />,
       })}
     >
       <Tab.Screen name="Feed" component={ChannelFeedScreen} />
@@ -89,17 +74,14 @@ export default function MainTabs() {
 
 const styles = StyleSheet.create({
   tabBar: {
+    height: Dim.tabBarHeight + (Platform.OS === 'ios' ? 20 : 0), // accounts for home bar
     backgroundColor: Colors.surface,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
     borderTopColor: Colors.border,
-    height: Platform.OS === 'ios' ? 82 : 64,
-    paddingTop: Spacing.sm,
-    paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
-    // Subtle top shadow facing upward
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 12,
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 10,
   },
 });

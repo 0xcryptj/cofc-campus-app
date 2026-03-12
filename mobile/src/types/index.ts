@@ -1,63 +1,47 @@
-// ─── Channels ────────────────────────────────────────────────────────────────
-
-export type Channel = 'dating' | 'general' | 'lore';
+export type Channel = 'general' | 'dating' | 'lore' | 'events';
 
 export const CHANNELS: { id: Channel; label: string }[] = [
+  { id: 'general', label: 'General' },
   { id: 'dating', label: 'Dating' },
-  { id: 'general', label: 'General CofC' },
   { id: 'lore', label: 'Misc Lore' },
+  { id: 'events', label: 'Events' },
 ];
-
-// ─── Anonymous Identity ───────────────────────────────────────────────────────
 
 export interface AnonIdentity {
   id: string;
-  displayName: string;   // e.g. "Purple Fox"
-  avatarColor: string;   // hex color
-  createdAt: string;     // ISO date string
+  displayName: string;
+  createdAt: string;
 }
-
-// ─── Post ─────────────────────────────────────────────────────────────────────
 
 export interface Post {
   id: string;
   channel: Channel;
   anonIdentityId: string;
   anonDisplayName: string;
-  anonAvatarColor: string;
   textBody: string;
-  imageUri?: string;       // local URI for now; Supabase Storage URL later
+  imageUri?: string;
   upvoteCount: number;
   commentCount: number;
+  shareCount: number;
   createdAt: string;
-  upvotedByMe: boolean;    // tracked locally for now
+  upvotedByMe: boolean;
 }
-
-// ─── Comment ──────────────────────────────────────────────────────────────────
 
 export interface Comment {
   id: string;
   postId: string;
   anonIdentityId: string;
   anonDisplayName: string;
-  anonAvatarColor: string;
   text: string;
   createdAt: string;
 }
 
-// ─── Moderation ───────────────────────────────────────────────────────────────
-
-export type ReportReason =
-  | 'spam'
-  | 'harassment'
-  | 'inappropriate'
-  | 'misinformation'
-  | 'other';
+export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'misinformation' | 'other';
 
 export interface ModerationLog {
   id: string;
-  reporterId: string;       // anon identity id of reporter
-  contentId: string;        // post id or comment id
+  reporterId: string;
+  contentId: string;
   contentType: 'post' | 'comment';
   reason: ReportReason;
   timestamp: string;
