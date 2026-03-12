@@ -13,14 +13,16 @@ import React, { useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet,
   Animated, TouchableOpacity,
-  Platform,
+  Platform, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-import DoodleWallpaper from '../components/auth/DoodleWallpaper';
+// Background image lives at repo-root /assets/background.png.
+// The relative path from mobile/src/screens/ goes up 3 levels.
+const BG_IMAGE = require('../../../assets/background.png');
 
 // ─── Dark onboarding palette (not from global theme) ──────────────────────────
 const D = {
@@ -170,15 +172,15 @@ export default function WelcomeScreen({ navigation }: Props) {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* ── Doodle wallpaper — drifts slowly ────────────────────────────── */}
+      {/* ── Background image — drifts slowly ───────────────────────────── */}
       <Animated.View
         style={[
-          StyleSheet.absoluteFill,
+          styles.bgImage,
           { transform: [{ translateX: driftX }, { translateY: driftY }] },
         ]}
         pointerEvents="none"
       >
-        <DoodleWallpaper />
+        <Image source={BG_IMAGE} style={StyleSheet.absoluteFill} resizeMode="cover" />
       </Animated.View>
 
       {/* ── Hero wordmark ────────────────────────────────────────────────── */}
@@ -224,6 +226,16 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#0E0F13',
+  },
+
+  // ── Background image ─────────────────────────────────────────────────────
+  bgImage: {
+    position: 'absolute',
+    // Oversized by 20px on each edge so drift never reveals background color
+    top: -20,
+    left: -20,
+    right: -20,
+    bottom: -20,
   },
 
   // ── Hero ─────────────────────────────────────────────────────────────────

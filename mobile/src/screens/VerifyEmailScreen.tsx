@@ -9,14 +9,15 @@ import React, { useRef } from 'react';
 import {
   View, Text, StyleSheet,
   TouchableOpacity, Platform,
-  Animated,
+  Animated, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-import DoodleWallpaper from '../components/auth/DoodleWallpaper';
+
+const BG_IMAGE = require('../../../assets/background.png');
 
 const D = {
   bg1:        '#0E0F13',
@@ -97,9 +98,9 @@ export default function VerifyEmailScreen({ navigation }: Props) {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Doodle wallpaper */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <DoodleWallpaper />
+      {/* Background image */}
+      <View style={styles.bgImage} pointerEvents="none">
+        <Image source={BG_IMAGE} style={StyleSheet.absoluteFill} resizeMode="cover" />
       </View>
 
       {/* Spacer so card sits near bottom */}
@@ -126,6 +127,13 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#0E0F13',
+  },
+  bgImage: {
+    position: 'absolute',
+    top: -20,
+    left: -20,
+    right: -20,
+    bottom: -20,
   },
 
   cardWrapper: {

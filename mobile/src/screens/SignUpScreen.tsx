@@ -12,14 +12,15 @@ import {
   View, Text, StyleSheet,
   TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform,
-  Animated,
+  Animated, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-import DoodleWallpaper from '../components/auth/DoodleWallpaper';
+
+const BG_IMAGE = require('../../../assets/background.png');
 
 // ─── Same dark palette as WelcomeScreen ───────────────────────────────────────
 const D = {
@@ -143,9 +144,9 @@ export default function SignUpScreen({ navigation }: Props) {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Doodle wallpaper */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <DoodleWallpaper />
+      {/* Background image */}
+      <View style={styles.bgImage} pointerEvents="none">
+        <Image source={BG_IMAGE} style={StyleSheet.absoluteFill} resizeMode="cover" />
       </View>
 
       {/* Back button */}
@@ -180,6 +181,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0E0F13',
     justifyContent: 'flex-end',
+  },
+  bgImage: {
+    position: 'absolute',
+    top: -20,
+    left: -20,
+    right: -20,
+    bottom: -20,
   },
 
   // ── Back button ──────────────────────────────────────────────────────────

@@ -27,10 +27,11 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Segment control layout ───────────────────────────────────────────────────
-const SEGMENT_PAD   = Space.md;           // horizontal padding of outer container
-const INSET         = 3;                  // inner padding of the pill track
-const TRACK_WIDTH   = SCREEN_WIDTH - SEGMENT_PAD * 2;
-const PILL_WIDTH    = (TRACK_WIDTH - INSET * 2) / CHANNELS.length;
+// Fixed compact width so channels sit snug together instead of spreading
+// across the full screen. Cap at 340px so it never overflows.
+const INSET       = 3;
+const TRACK_WIDTH = Math.min(SCREEN_WIDTH - Space.md * 2, 340);
+const PILL_WIDTH  = (TRACK_WIDTH - INSET * 2) / CHANNELS.length;
 
 export default function ChannelFeedScreen() {
   const navigation   = useNavigation<Nav>();
@@ -193,11 +194,12 @@ const styles = StyleSheet.create({
 
   // ── Segment ───────────────────────────────────────
   segmentOuter: {
-    paddingHorizontal: SEGMENT_PAD,
+    alignItems: 'center',      // center the fixed-width track
     marginBottom: Space.sm,
   },
   segmentTrack: {
     flexDirection: 'row',
+    width: TRACK_WIDTH,        // fixed compact width
     backgroundColor: Colors.border,
     borderRadius: Radius.xl,
     padding: INSET,
@@ -218,11 +220,11 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   segmentLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: Type.weight.semibold,
     fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
-    letterSpacing: 0.2,
+    letterSpacing: 0,
   },
   segmentLabelActive: {
     color: Colors.white,
