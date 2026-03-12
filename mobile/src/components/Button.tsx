@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     letterSpacing: Type.tracking.label,
   },
   labelPrimary: {

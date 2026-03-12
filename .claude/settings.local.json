@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth:*)",
+      "Bash(node --version && npm --version && npx --version 2>&1)",
+      "Bash(gh repo:*)",
+      "Bash(cd:*)",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app\" && npx create-expo-app@latest mobile --template blank-typescript 2>&1)",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app/mobile\" && npm install @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context 2>&1)",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app\" && git push -u origin main 2>&1)",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app/mobile\" && npm install @react-navigation/bottom-tabs expo-image-picker 2>&1)",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app/mobile\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app\" && git push 2>&1)",
+      "mcp__claude_ai_Figma__whoami",
+      "Bash(cd \"/c/Users/joarb/OneDrive/Desktop/charleston tea app/mobile\" && npm install react-native-svg expo-blur expo-linear-gradient 2>&1)",
+      "Bash(tail:*)"
+    ]
+  }
+}

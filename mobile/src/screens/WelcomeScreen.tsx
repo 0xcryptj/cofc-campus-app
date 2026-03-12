@@ -234,7 +234,8 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontSize: 54,
-    fontWeight: '800',
+    fontWeight: '700',
+    fontFamily: 'SpaceMono_700Bold',
     color: '#F7F4ED',
     letterSpacing: -1.5,
     lineHeight: 58,
@@ -271,6 +272,7 @@ const styles = StyleSheet.create({
   ctaLabel: {
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'SpaceMono_700Bold',
     color: '#F7F4ED',
     letterSpacing: 0.4,
   },

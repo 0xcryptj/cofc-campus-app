@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
     letterSpacing: Type.tracking.label,
     textTransform: 'uppercase',

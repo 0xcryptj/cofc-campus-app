@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
     letterSpacing: 0,
   },

@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
   identityLabel: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
     letterSpacing: Type.tracking.label,
     textTransform: 'uppercase',
@@ -169,6 +170,7 @@ const styles = StyleSheet.create({
   identityName: {
     fontSize: Type.size.body,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
   },
 
@@ -179,6 +181,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
     letterSpacing: Type.tracking.label,
     textTransform: 'uppercase',
@@ -205,6 +208,7 @@ const styles = StyleSheet.create({
   channelChipLabel: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
     letterSpacing: Type.tracking.caption,
   },
@@ -281,5 +285,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 12,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
   },
 });

@@ -155,6 +155,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
+    fontFamily: 'SpaceMono_700Bold',
     color: '#F7F4ED',
     letterSpacing: -0.4,
     textAlign: 'center',
@@ -175,6 +176,7 @@ const styles = StyleSheet.create({
   ctaLabel: {
     fontSize: 15,
     fontWeight: '700',
+    fontFamily: 'SpaceMono_700Bold',
     color: '#F7F4ED',
     letterSpacing: 0.3,
   },

@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
   pinnedName: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
   },
   pinnedTime: {
@@ -216,6 +217,7 @@ const styles = StyleSheet.create({
   commentsHeading: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
     letterSpacing: Type.tracking.label,
     textTransform: 'uppercase',
@@ -249,6 +251,7 @@ const styles = StyleSheet.create({
   commentName: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
     flex: 1,
   },
@@ -314,6 +317,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 18,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     lineHeight: 22,
   },
 });

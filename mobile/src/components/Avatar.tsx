@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
   initial: {
     color: Colors.primary,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     letterSpacing: 0.2,
   },
 });

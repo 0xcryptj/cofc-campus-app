@@ -138,6 +138,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Type.size.section,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
     letterSpacing: Type.tracking.tight,
   },
@@ -174,6 +175,7 @@ const styles = StyleSheet.create({
   cardName: {
     fontSize: Type.size.body,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
   },
   cardStatus: {
@@ -194,6 +196,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 12,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
   },
   deleteText: {
     fontSize: Type.size.label,
@@ -222,6 +225,7 @@ const styles = StyleSheet.create({
   addBtnLabel: {
     fontSize: Type.size.body,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.primary,
   },
 

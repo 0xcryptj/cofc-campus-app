@@ -65,6 +65,7 @@ export default function RootNavigator() {
             headerTitleStyle: {
               fontSize: Type.size.body,
               fontWeight: Type.weight.semibold,
+              fontFamily: 'SpaceMono_700Bold',
               color: Colors.textPrimary,
             },
           }}
@@ -84,6 +85,7 @@ export default function RootNavigator() {
             headerTitleStyle: {
               fontSize: Type.size.body,
               fontWeight: Type.weight.semibold,
+              fontFamily: 'SpaceMono_700Bold',
               color: Colors.textPrimary,
             },
           }}

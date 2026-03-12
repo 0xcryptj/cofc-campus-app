@@ -186,6 +186,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontSize: Type.size.section,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.primary,
     letterSpacing: Type.tracking.tight,
   },
@@ -219,6 +220,7 @@ const styles = StyleSheet.create({
   segmentLabel: {
     fontSize: 11,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
     letterSpacing: 0.2,
   },
@@ -240,6 +242,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: Type.size.body,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
   },
   emptySubtitle: {

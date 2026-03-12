@@ -1,3 +1,10 @@
+// ─── Font families ────────────────────────────────────────────────────────────
+
+export const Fonts = {
+  regular: 'SpaceMono_400Regular',
+  bold:    'SpaceMono_700Bold',
+} as const;
+
 // ─── Color tokens ─────────────────────────────────────────────────────────────
 
 export const Colors = {

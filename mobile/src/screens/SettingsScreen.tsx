@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Type.size.section,
     fontWeight: Type.weight.bold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textPrimary,
     letterSpacing: Type.tracking.tight,
     paddingVertical: Space.sm,
@@ -106,6 +107,7 @@ const styles = StyleSheet.create({
   groupLabel: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.semibold,
+    fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
     letterSpacing: Type.tracking.label,
     textTransform: 'uppercase',
