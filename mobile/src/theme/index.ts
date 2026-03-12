@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // ─── Font families ────────────────────────────────────────────────────────────
 
 export const Fonts = {
@@ -103,22 +105,17 @@ export const Radius = {
 
 export const Elevation = {
   // Spec-defined card shadow
-  card: {
-    elevation:     2,
-    shadowColor:   '#000000',
-    shadowOpacity: 0.06,
-    shadowRadius:  4,
-    shadowOffset:  { width: 0, height: 1 },
-  },
+  // Web uses boxShadow; native uses shadow* props (react-native-web warns on shadow*)
+  card: Platform.select({
+    web:     { boxShadow: '0px 1px 4px rgba(0,0,0,0.06)' },
+    default: { elevation: 2, shadowColor: '#000000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } },
+  }) as object,
   // Stronger — modal, bottom sheet
-  modal: {
-    elevation:     8,
-    shadowColor:   '#000000',
-    shadowOpacity: 0.12,
-    shadowRadius:  12,
-    shadowOffset:  { width: 0, height: 4 },
-  },
-} as const;
+  modal: Platform.select({
+    web:     { boxShadow: '0px 4px 12px rgba(0,0,0,0.12)' },
+    default: { elevation: 8, shadowColor: '#000000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+  }) as object,
+};
 
 // ─── Dimensions ───────────────────────────────────────────────────────────────
 

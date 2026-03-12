@@ -1,6 +1,9 @@
 import React, { useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View, Platform, } from 'react-native';
 import { Colors } from '../theme';
+
+// useNativeDriver:true is unsupported on web; false works on all platforms
+const ND = Platform.OS !== 'web';
 
 interface Props {
   uri: string;
@@ -17,7 +20,7 @@ export default function FadeImage({ uri, aspectRatio = 4 / 3 }: Props) {
     Animated.timing(opacity, {
       toValue: 1,
       duration: 260,
-      useNativeDriver: true,
+      useNativeDriver: ND,
     }).start();
   }
 

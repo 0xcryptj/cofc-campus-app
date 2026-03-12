@@ -7,13 +7,16 @@ import {
   StyleSheet,
   Animated,
   Alert,
-} from 'react-native';
+ Platform, } from 'react-native';
 import Avatar from './Avatar';
 import FadeImage from './FadeImage';
 import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { timeAgo } from '../utils/timeAgo';
 import { logReport } from '../services/moderationService';
 import type { Post } from '../types';
+
+// useNativeDriver:true is unsupported on web; false works on all platforms
+const ND = Platform.OS !== 'web';
 
 interface Props {
   post: Post;
@@ -31,13 +34,13 @@ export default function PostCard({ post, onPress, onUpvote, activeIdentityId }: 
         toValue: 1.5,
         damping: 10,
         stiffness: 200,
-        useNativeDriver: true,
+        useNativeDriver: ND,
       }),
       Animated.spring(upvoteScale, {
         toValue: 1,
         damping: 10,
         stiffness: 200,
-        useNativeDriver: true,
+        useNativeDriver: ND,
       }),
     ]).start();
     onUpvote(post.id);

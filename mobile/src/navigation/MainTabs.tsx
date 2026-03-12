@@ -78,10 +78,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: -1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
     elevation: 10,
+    ...Platform.select({
+      web:     { boxShadow: '0px -1px 6px rgba(0,0,0,0.04)' },
+      default: { shadowColor: Colors.black, shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.04, shadowRadius: 6 },
+    }),
   },
 });

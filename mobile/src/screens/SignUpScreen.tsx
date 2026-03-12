@@ -22,6 +22,9 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 
 const BG_IMAGE = require('../../assets/background.png');
 
+// useNativeDriver:true is unsupported on web; false works on all platforms
+const ND = Platform.OS !== 'web';
+
 // ─── Same dark palette as WelcomeScreen ───────────────────────────────────────
 const D = {
   bg1:        '#0E0F13',
@@ -54,8 +57,8 @@ export default function SignUpScreen({ navigation }: Props) {
 
   // Button scale microinteraction
   const btnScale = useRef(new Animated.Value(1)).current;
-  const onPressIn  = () => Animated.spring(btnScale, { toValue: 0.965, damping: 12, stiffness: 350, useNativeDriver: true }).start();
-  const onPressOut = () => Animated.spring(btnScale, { toValue: 1,     damping: 12, stiffness: 350, useNativeDriver: true }).start();
+  const onPressIn  = () => Animated.spring(btnScale, { toValue: 0.965, damping: 12, stiffness: 350, useNativeDriver: ND }).start();
+  const onPressOut = () => Animated.spring(btnScale, { toValue: 1,     damping: 12, stiffness: 350, useNativeDriver: ND }).start();
 
   async function handleContinue() {
     setTouched(true);

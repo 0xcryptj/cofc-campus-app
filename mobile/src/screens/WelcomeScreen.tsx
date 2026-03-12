@@ -22,6 +22,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 const BG_IMAGE = require('../../assets/background.png');
 
+// useNativeDriver:true is unsupported on web; false works on all platforms
+const ND = Platform.OS !== 'web';
+
 // ─── Dark onboarding palette (not from global theme) ──────────────────────────
 const D = {
   bg1:        '#0E0F13',
@@ -62,32 +65,32 @@ export default function WelcomeScreen({ navigation }: Props) {
       Animated.timing(bgOpacity, {
         toValue: 1,
         duration: 700,
-        useNativeDriver: true,
+        useNativeDriver: ND,
       }),
       Animated.parallel([
         Animated.timing(heroOpacity, {
           toValue: 1,
           duration: 560,
-          useNativeDriver: true,
+          useNativeDriver: ND,
         }),
         Animated.spring(heroY, {
           toValue: 0,
           damping: 20,
           stiffness: 120,
-          useNativeDriver: true,
+          useNativeDriver: ND,
         }),
       ]),
       Animated.parallel([
         Animated.timing(cardOpacity, {
           toValue: 1,
           duration: 480,
-          useNativeDriver: true,
+          useNativeDriver: ND,
         }),
         Animated.spring(cardY, {
           toValue: 0,
           damping: 18,
           stiffness: 110,
-          useNativeDriver: true,
+          useNativeDriver: ND,
         }),
       ]),
     ]).start();
@@ -95,18 +98,18 @@ export default function WelcomeScreen({ navigation }: Props) {
     // Slow horizontal drift loop
     Animated.loop(
       Animated.sequence([
-        Animated.timing(driftX, { toValue: 9,  duration: 9000, useNativeDriver: true }),
-        Animated.timing(driftX, { toValue: -9, duration: 9000, useNativeDriver: true }),
-        Animated.timing(driftX, { toValue: 0,  duration: 9000, useNativeDriver: true }),
+        Animated.timing(driftX, { toValue: 9,  duration: 9000, useNativeDriver: ND }),
+        Animated.timing(driftX, { toValue: -9, duration: 9000, useNativeDriver: ND }),
+        Animated.timing(driftX, { toValue: 0,  duration: 9000, useNativeDriver: ND }),
       ])
     ).start();
 
     // Slow vertical drift loop (different phase)
     Animated.loop(
       Animated.sequence([
-        Animated.timing(driftY, { toValue: 11,  duration: 11000, useNativeDriver: true }),
-        Animated.timing(driftY, { toValue: -7,  duration: 11000, useNativeDriver: true }),
-        Animated.timing(driftY, { toValue: 0,   duration: 11000, useNativeDriver: true }),
+        Animated.timing(driftY, { toValue: 11,  duration: 11000, useNativeDriver: ND }),
+        Animated.timing(driftY, { toValue: -7,  duration: 11000, useNativeDriver: ND }),
+        Animated.timing(driftY, { toValue: 0,   duration: 11000, useNativeDriver: ND }),
       ])
     ).start();
   }, []);
@@ -117,7 +120,7 @@ export default function WelcomeScreen({ navigation }: Props) {
       toValue: 0.965,
       damping: 12,
       stiffness: 350,
-      useNativeDriver: true,
+      useNativeDriver: ND,
     }).start();
 
   const onPressOut = () =>
@@ -125,7 +128,7 @@ export default function WelcomeScreen({ navigation }: Props) {
       toValue: 1,
       damping: 12,
       stiffness: 350,
-      useNativeDriver: true,
+      useNativeDriver: ND,
     }).start();
 
   // ── Card inner content (shared between BlurView and fallback View) ────────
@@ -175,8 +178,8 @@ export default function WelcomeScreen({ navigation }: Props) {
         style={[
           styles.bgImage,
           { transform: [{ translateX: driftX }, { translateY: driftY }] },
+          { pointerEvents: 'none' },
         ]}
-        pointerEvents="none"
       >
         <Image source={BG_IMAGE} style={StyleSheet.absoluteFill} resizeMode="cover" />
       </Animated.View>

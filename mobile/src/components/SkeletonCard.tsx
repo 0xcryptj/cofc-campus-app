@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, View, StyleSheet } from 'react-native';
+import { Animated, View, StyleSheet, Platform, } from 'react-native';
 import { Colors, Space, Radius, Elevation } from '../theme';
+
+// useNativeDriver:true is unsupported on web; false works on all platforms
+const ND = Platform.OS !== 'web';
 
 function Block({ width, height, radius = Radius.xs }: { width: number | string; height: number; radius?: number }) {
   return <View style={[styles.block, { width: width as any, height, borderRadius: radius }]} />;
@@ -12,8 +15,8 @@ export default function SkeletonCard() {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 750, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.5, duration: 750, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 750, useNativeDriver: ND }),
+        Animated.timing(pulse, { toValue: 0.5, duration: 750, useNativeDriver: ND }),
       ])
     ).start();
   }, []);

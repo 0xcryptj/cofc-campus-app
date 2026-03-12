@@ -22,6 +22,9 @@ import type { Channel, Post } from '../types';
 import { MOCK_POSTS, MOCK_IDENTITIES } from '../services/mockData';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
+// useNativeDriver:true is unsupported on web; false works on all platforms
+const ND = Platform.OS !== 'web';
+
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -52,7 +55,7 @@ export default function ChannelFeedScreen() {
       toValue: idx * PILL_WIDTH,
       damping: 15,
       stiffness: 180,
-      useNativeDriver: true,
+      useNativeDriver: ND,
     }).start();
   }
 
@@ -262,11 +265,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
     elevation: 8,
+    ...Platform.select({
+      web:     { boxShadow: `0px 6px 12px rgba(128,0,32,0.35)` },
+      default: { shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12 },
+    }),
   },
   fabIcon: {
     fontSize: 26,
