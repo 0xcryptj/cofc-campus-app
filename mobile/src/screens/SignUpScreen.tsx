@@ -5,10 +5,14 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  SafeAreaView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import { Colors, Typography, Spacing, Radius } from '../theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
@@ -16,70 +20,127 @@ type Props = {
 
 export default function SignUpScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function handleSignUp() {
-    if (!email.endsWith('@g.cofc.edu')) {
-      Alert.alert('Invalid email', 'You must use a @g.cofc.edu email address.');
+  const isValid = email.trim().toLowerCase().endsWith('@g.cofc.edu');
+
+  async function handleSignUp() {
+    if (!isValid) {
+      Alert.alert('CofC email required', 'Only @g.cofc.edu addresses can join.');
       return;
     }
-    // TODO: send verification email via Supabase auth
+    setLoading(true);
+    // TODO: replace with Supabase magic link / OTP send
+    await new Promise((res) => setTimeout(res, 700));
+    setLoading(false);
     navigation.navigate('VerifyEmail');
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
-      <Text style={styles.label}>Enter your CofC email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="you@g.cofc.edu"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Send Verification Email</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.top}>
+          <Text style={styles.title}>Sign Up</Text>
+          <Text style={styles.subtitle}>
+            Enter your College of Charleston email. We will send you a verification link.
+          </Text>
+        </View>
+
+        <View style={styles.form}>
+          <Text style={styles.label}>CofC Email</Text>
+          <TextInput
+            style={[styles.input, email.length > 0 && !isValid && styles.inputError]}
+            placeholder="you@g.cofc.edu"
+            placeholderTextColor={Colors.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          {email.length > 0 && !isValid && (
+            <Text style={styles.errorText}>Must be a @g.cofc.edu address</Text>
+          )}
+
+          <TouchableOpacity
+            style={[styles.btn, (!isValid || loading) && styles.btnDisabled]}
+            onPress={handleSignUp}
+            disabled={!isValid || loading}
+          >
+            <Text style={styles.btnText}>
+              {loading ? 'Sending...' : 'Send Verification Email'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
   container: {
     flex: 1,
-    padding: 24,
+    padding: Spacing.xl,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+  },
+  top: {
+    marginBottom: Spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 24,
-    color: '#1a1a1a',
+    fontSize: Typography.xxl,
+    fontWeight: Typography.bold,
+    color: Colors.maroon,
+    marginBottom: Spacing.sm,
+  },
+  subtitle: {
+    fontSize: Typography.base,
+    color: Colors.textSecondary,
+    lineHeight: 23,
+  },
+  form: {
+    gap: Spacing.sm,
   },
   label: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 8,
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
+    color: Colors.textSecondary,
   },
   input: {
+    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 20,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    fontSize: Typography.base,
+    color: Colors.textPrimary,
   },
-  button: {
-    backgroundColor: '#1a1a1a',
-    paddingVertical: 14,
-    borderRadius: 8,
+  inputError: {
+    borderColor: Colors.error,
+  },
+  errorText: {
+    fontSize: Typography.xs,
+    color: Colors.error,
+  },
+  btn: {
+    backgroundColor: Colors.maroon,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
     alignItems: 'center',
+    marginTop: Spacing.sm,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  btnDisabled: {
+    opacity: 0.4,
+  },
+  btnText: {
+    color: Colors.white,
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
   },
 });
