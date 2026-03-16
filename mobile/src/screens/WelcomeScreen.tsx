@@ -20,7 +20,8 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
-const BG_IMAGE = require('../../assets/background.png');
+const BG_IMAGE  = require('../../assets/background.png');
+const APP_LOGO  = require('../../assets/newlogo.png');
 
 // useNativeDriver:true is unsupported on web; false works on all platforms
 const ND = Platform.OS !== 'web';
@@ -188,10 +189,11 @@ export default function WelcomeScreen({ navigation }: Props) {
       <Animated.View
         style={[
           styles.hero,
-          { paddingTop: insets.top + 56 },
+          { paddingTop: insets.top + 40 },
           { opacity: heroOpacity, transform: [{ translateY: heroY }] },
         ]}
       >
+        <Image source={APP_LOGO} style={styles.logoImage} resizeMode="contain" />
         <Text style={styles.appName} allowFontScaling={false}>
           Charleston{'\n'}Tea
         </Text>
@@ -244,6 +246,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 28,
     gap: 14,
+  },
+  logoImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 22,
+    marginBottom: 4,
   },
   appName: {
     fontSize: 54,
