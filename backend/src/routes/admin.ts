@@ -202,6 +202,17 @@ router.patch('/reports/:id', async (req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
+  const { data: report, error: fetchError } = await supabaseAdmin
+    .from('reports')
+    .select('id, target_type, target_id')
+    .eq('id', id)
+    .single();
+
+  if (fetchError || !report) {
+    res.status(404).json({ error: 'Report not found' });
+    return;
+  }
+
   const { error } = await supabaseAdmin
     .from('reports')
     .update({ status })
@@ -212,7 +223,8 @@ router.patch('/reports/:id', async (req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
-  await logAction(req.user!.id, status === 'resolved' ? 'restore' : 'restore', 'post', id);
+  const action = status === 'resolved' ? 'resolve' : 'dismiss';
+  await logAction(req.user!.id, action, report.target_type, report.target_id);
   res.json({ ok: true });
 });
 

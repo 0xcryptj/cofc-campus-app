@@ -31,25 +31,39 @@ const linking = {
   prefixes: [Linking.createURL('/'), 'charlestonteaapp://'],
   config: {
     screens: {
-      // Magic link lands here; Supabase SDK handles the token exchange automatically
       VerifyEmail: 'auth/callback',
     },
   },
 };
 
+/** Parse tokens from magic-link URL (detectSessionInUrl is false in RN). */
+async function setSessionFromAuthUrl(url: string): Promise<void> {
+  const hash = url.includes('#') ? url.split('#')[1] : '';
+  if (!hash) return;
+  const params = new URLSearchParams(hash);
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  if (access_token && refresh_token) {
+    await supabase.auth.setSession({ access_token, refresh_token });
+  }
+}
+
 export default function RootNavigator() {
   const { session, loading } = useAuth();
 
-  // Handle incoming deep links (magic link callback) when app is already open
+  // Handle magic link: cold start (getInitialURL) and when app is already open (url event).
+  // detectSessionInUrl is false in RN, so we must parse the URL and set the session ourselves.
   useEffect(() => {
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      // Supabase detects the token in the URL and fires onAuthStateChange automatically
-      // when detectSessionInUrl is true; we just need the URL passed through.
+    const handleAuthUrl = (url: string) => {
       const parsed = Linking.parse(url);
       if (parsed.path === 'auth/callback') {
-        supabase.auth.getSession(); // trigger refresh
+        setSessionFromAuthUrl(url);
       }
+    };
+    Linking.getInitialURL().then((url) => {
+      if (url) handleAuthUrl(url);
     });
+    const sub = Linking.addEventListener('url', ({ url }) => handleAuthUrl(url));
     return () => sub.remove();
   }, []);
 

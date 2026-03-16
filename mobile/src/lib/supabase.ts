@@ -9,6 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
+    // false in RN: no browser URL to detect. Magic-link tokens are handled in RootNavigator via Linking.
     detectSessionInUrl: false,
   },
 });
