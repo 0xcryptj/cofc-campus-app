@@ -13,6 +13,7 @@ import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { CHANNELS } from '../types';
 import type { Channel } from '../types';
 import { MOCK_IDENTITIES } from '../services/mockData';
+import { createPost } from '../services/api';
 
 const MAX_CHARS = 500;
 
@@ -53,9 +54,18 @@ export default function CreatePostScreen() {
   async function handlePost() {
     if (!canPost) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700)); // TODO: Supabase insert
-    setLoading(false);
-    navigation.goBack();
+    try {
+      await createPost({
+        channel,
+        body: text.trim(),
+        public_alias: activeIdentity.displayName,
+      });
+      navigation.goBack();
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not post');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

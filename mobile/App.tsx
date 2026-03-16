@@ -7,6 +7,7 @@ import {
 } from '@expo-google-fonts/space-mono';
 import * as SplashScreen from 'expo-splash-screen';
 import RootNavigator from './src/navigation/RootNavigator';
+import { AuthProvider } from './src/lib/AuthContext';
 
 // Keep splash visible until fonts are ready
 SplashScreen.preventAutoHideAsync();
@@ -31,5 +32,9 @@ export default function App() {
 
   if (!fontsLoaded) return null;
 
-  return <RootNavigator />;
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
 }

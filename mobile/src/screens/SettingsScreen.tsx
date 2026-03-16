@@ -1,9 +1,10 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView,
-  TouchableOpacity, ScrollView,
+  TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
 import { Colors, Type, Space, Radius, Elevation } from '../theme';
+import { useAuth } from '../lib/AuthContext';
 
 interface RowProps {
   label: string;
@@ -30,6 +31,15 @@ function Row({ label, value, destructive, onPress }: RowProps) {
 }
 
 export default function SettingsScreen() {
+  const { signOut } = useAuth();
+
+  function handleSignOut() {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: signOut },
+    ]);
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -43,7 +53,7 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <Text style={styles.groupLabel}>Account</Text>
           <View style={styles.card}>
-            <Row label="Sign Out" onPress={() => {}} />
+            <Row label="Sign Out" onPress={handleSignOut} />
             <View style={styles.divider} />
             <Row label="Delete Account" destructive onPress={() => {}} />
           </View>

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,8 @@ import SkeletonCard from '../components/SkeletonCard';
 import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { CHANNELS } from '../types';
 import type { Channel, Post } from '../types';
-import { MOCK_POSTS, MOCK_IDENTITIES } from '../services/mockData';
+import { MOCK_IDENTITIES } from '../services/mockData';
+import { getPosts, upvotePost, apiPostToLocal } from '../services/api';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 // useNativeDriver:true is unsupported on web; false works on all platforms
@@ -40,14 +41,30 @@ export default function ChannelFeedScreen() {
   const navigation   = useNavigation<Nav>();
   const insets       = useSafeAreaInsets();
   const [activeIdx, setActiveIdx] = useState(0);
-  const [posts, setPosts]         = useState<Post[]>(MOCK_POSTS);
+  const [posts, setPosts]         = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading]    = useState(false); // set true to preview skeleton
+  const [loading, setLoading]    = useState(true);
 
   const pillX = useRef(new Animated.Value(0)).current;
   const activeIdentity = MOCK_IDENTITIES[0];
   const activeChannel: Channel = CHANNELS[activeIdx].id;
-  const filtered = posts.filter(p => p.channel === activeChannel);
+
+  const fetchPosts = useCallback(async (channel: Channel) => {
+    try {
+      const apiPosts = await getPosts(channel);
+      setPosts(apiPosts.map(apiPostToLocal));
+    } catch {
+      // fall back gracefully — empty feed
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchPosts(activeChannel);
+  }, [activeChannel, fetchPosts]);
 
   function selectChannel(idx: number) {
     setActiveIdx(idx);
@@ -61,16 +78,19 @@ export default function ChannelFeedScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise(r => setTimeout(r, 800)); // TODO: refetch from Supabase
+    await fetchPosts(activeChannel);
     setRefreshing(false);
-  }, []);
+  }, [activeChannel, fetchPosts]);
 
   function handleUpvote(postId: string) {
     setPosts(prev =>
       prev.map(p => {
         if (p.id !== postId) return p;
         const voted = p.upvotedByMe;
-        return { ...p, upvotedByMe: !voted, upvoteCount: voted ? p.upvoteCount - 1 : p.upvoteCount + 1 };
+        const newCount = voted ? p.upvoteCount - 1 : p.upvoteCount + 1;
+        // Fire and forget — optimistic update
+        if (!voted) upvotePost(postId).catch(() => {});
+        return { ...p, upvotedByMe: !voted, upvoteCount: newCount };
       })
     );
   }
@@ -128,7 +148,7 @@ export default function ChannelFeedScreen() {
       ) : (
         /* ── Feed ─────────────────────────────────────── */
         <FlatList
-          data={filtered}
+          data={posts}
           keyExtractor={item => item.id}
           contentContainerStyle={[
             styles.feedContent,

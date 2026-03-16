@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, RefreshControl,
@@ -12,8 +12,8 @@ import Avatar from '../components/Avatar';
 import FadeImage from '../components/FadeImage';
 import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { timeAgo } from '../utils/timeAgo';
-import { logReport } from '../services/moderationService';
-import { MOCK_COMMENTS, MOCK_IDENTITIES } from '../services/mockData';
+import { MOCK_IDENTITIES } from '../services/mockData';
+import { getComments, addComment, submitReport, apiCommentToLocal } from '../services/api';
 import type { Comment } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
@@ -21,38 +21,62 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
 export default function PostDetailScreen({ route }: Props) {
   const { post } = route.params;
   const insets = useSafeAreaInsets();
-  const [comments, setComments] = useState<Comment[]>(
-    MOCK_COMMENTS.filter(c => c.postId === post.id)
-  );
+  const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const activeIdentity = MOCK_IDENTITIES[0];
 
+  const loadComments = useCallback(async () => {
+    try {
+      const apiComments = await getComments(post.id);
+      setComments(apiComments.map(apiCommentToLocal));
+    } catch {
+      // non-blocking — keep empty list
+    }
+  }, [post.id]);
+
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await new Promise(r => setTimeout(r, 600));
+    await loadComments();
     setRefreshing(false);
-  }, []);
+  }, [loadComments]);
 
-  function submitComment() {
+  async function submitComment() {
     const text = draft.trim();
     if (!text) return;
-    const c: Comment = {
-      id: `c-${Date.now()}`,
+    // Optimistic add
+    const tempComment: Comment = {
+      id: `temp-${Date.now()}`,
       postId: post.id,
       anonIdentityId: activeIdentity.id,
       anonDisplayName: activeIdentity.displayName,
       text,
       createdAt: new Date().toISOString(),
     };
-    setComments(prev => [...prev, c]);
+    setComments(prev => [...prev, tempComment]);
     setDraft('');
+    try {
+      const saved = await addComment({
+        postId: post.id,
+        body: text,
+        public_alias: activeIdentity.displayName,
+      });
+      setComments(prev =>
+        prev.map(c => c.id === tempComment.id ? apiCommentToLocal(saved) : c)
+      );
+    } catch {
+      // Keep optimistic comment visible; it'll be re-fetched on refresh
+    }
   }
 
   function reportComment(id: string) {
     Alert.alert('Report Comment', 'What is the issue?', [
-      { text: 'Harassment', onPress: () => logReport({ reporterId: activeIdentity.id, contentId: id, contentType: 'comment', reason: 'harassment' }) },
-      { text: 'Spam', onPress: () => logReport({ reporterId: activeIdentity.id, contentId: id, contentType: 'comment', reason: 'spam' }) },
+      { text: 'Harassment', onPress: () => submitReport({ target_type: 'comment', target_id: id, reason: 'harassment' }).catch(() => {}) },
+      { text: 'Spam', onPress: () => submitReport({ target_type: 'comment', target_id: id, reason: 'spam' }).catch(() => {}) },
       { text: 'Cancel', style: 'cancel' },
     ]);
   }

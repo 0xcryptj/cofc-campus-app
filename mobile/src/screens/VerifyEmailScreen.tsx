@@ -5,7 +5,7 @@
  * Glass card with mail icon, copy, and CTA.
  */
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet,
   TouchableOpacity, Platform,
@@ -16,6 +16,7 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import { useAuth } from '../lib/AuthContext';
 
 const BG_IMAGE = require('../../assets/background.png');
 
@@ -38,6 +39,14 @@ type Props = {
 
 export default function VerifyEmailScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { session } = useAuth();
+
+  // Auto-navigate when magic link is verified (session appears)
+  useEffect(() => {
+    if (session) {
+      navigation.replace('Main');
+    }
+  }, [session, navigation]);
 
   const btnScale = useRef(new Animated.Value(1)).current;
   const onPressIn  = () => Animated.spring(btnScale, { toValue: 0.965, damping: 12, stiffness: 350, useNativeDriver: ND }).start();
@@ -54,30 +63,9 @@ export default function VerifyEmailScreen({ navigation }: Props) {
         <Text style={styles.title} allowFontScaling={false}>Check your inbox</Text>
         <Text style={styles.body}>
           We sent a link to your @g.cofc.edu address.{'\n'}
-          Open it to verify, then come back here.
+          Open it to verify — you'll be let in automatically.
         </Text>
       </View>
-
-      {/* TODO: replace with Supabase auth state listener */}
-      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-        <TouchableOpacity
-          onPress={() => navigation.replace('Main')}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          activeOpacity={1}
-          accessibilityRole="button"
-          accessibilityLabel="Enter the app"
-        >
-          <LinearGradient
-            colors={[D.maroon, D.deepMaroon]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ctaButton}
-          >
-            <Text style={styles.ctaLabel}>I'm Verified — Enter the App</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
 
       <TouchableOpacity
         onPress={() => navigation.goBack()}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   SafeAreaView, Alert, ScrollView,
@@ -6,21 +6,49 @@ import {
 import Avatar from '../components/Avatar';
 import { Colors, Type, Space, Radius, Elevation } from '../theme';
 import { generateIdentity } from '../utils/generateIdentity';
-import { MOCK_IDENTITIES } from '../services/mockData';
+import { getAliases, createAlias, deleteAlias } from '../services/api';
 import type { AnonIdentity } from '../types';
 
 const MAX = 3;
 
 export default function IdentityManagerScreen() {
-  const [identities, setIdentities] = useState<AnonIdentity[]>(MOCK_IDENTITIES);
-  const [activeId, setActiveId] = useState(MOCK_IDENTITIES[0].id);
+  const [identities, setIdentities] = useState<AnonIdentity[]>([]);
+  const [activeId, setActiveId] = useState('');
 
-  function create() {
+  const loadAliases = useCallback(async () => {
+    try {
+      const aliases = await getAliases();
+      const mapped: AnonIdentity[] = aliases.map(a => ({
+        id: a.id,
+        displayName: a.alias,
+        createdAt: a.created_at,
+      }));
+      setIdentities(mapped);
+      if (mapped.length > 0 && !activeId) setActiveId(mapped[0].id);
+    } catch {
+      // Non-critical — show empty state
+    }
+  }, [activeId]);
+
+  useEffect(() => { loadAliases(); }, [loadAliases]);
+
+  async function create() {
     if (identities.length >= MAX) {
       Alert.alert('Limit reached', `You can hold up to ${MAX} identities.`);
       return;
     }
-    setIdentities(prev => [...prev, generateIdentity()]);
+    try {
+      const generated = generateIdentity();
+      const saved = await createAlias(generated.displayName);
+      const newIdentity: AnonIdentity = {
+        id: saved.id,
+        displayName: saved.alias,
+        createdAt: saved.created_at,
+      };
+      setIdentities(prev => [...prev, newIdentity]);
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not create identity');
+    }
   }
 
   function remove(id: string) {
@@ -31,11 +59,16 @@ export default function IdentityManagerScreen() {
     Alert.alert('Delete identity?', 'This cannot be undone.', [
       {
         text: 'Delete', style: 'destructive',
-        onPress: () => {
-          setIdentities(prev => prev.filter(i => i.id !== id));
-          if (activeId === id) {
-            const rest = identities.filter(i => i.id !== id);
-            if (rest.length) setActiveId(rest[0].id);
+        onPress: async () => {
+          try {
+            await deleteAlias(id);
+            setIdentities(prev => prev.filter(i => i.id !== id));
+            if (activeId === id) {
+              const rest = identities.filter(i => i.id !== id);
+              if (rest.length) setActiveId(rest[0].id);
+            }
+          } catch (err: unknown) {
+            Alert.alert('Error', err instanceof Error ? err.message : 'Could not delete');
           }
         },
       },

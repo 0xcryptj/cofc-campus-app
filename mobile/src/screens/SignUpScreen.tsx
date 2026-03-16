@@ -12,13 +12,14 @@ import {
   View, Text, StyleSheet,
   TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform,
-  Animated, Image,
+  Animated, Image, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import { supabase } from '../lib/supabase';
 
 const BG_IMAGE = require('../../assets/background.png');
 
@@ -64,8 +65,17 @@ export default function SignUpScreen({ navigation }: Props) {
     setTouched(true);
     if (!isValid) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600)); // TODO: Supabase magic link
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: 'charlestonteaapp://auth/callback',
+      },
+    });
     setLoading(false);
+    if (error) {
+      Alert.alert('Error', error.message);
+      return;
+    }
     navigation.navigate('VerifyEmail');
   }
 
