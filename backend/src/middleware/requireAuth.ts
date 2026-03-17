@@ -1,9 +1,14 @@
 import { Response, NextFunction } from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '../lib/supabase';
 import { AuthRequest } from '../types';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const anonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Single persistent client for JWT verification (anon key, not service role)
+const supabaseAuth = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+);
 
 export async function requireAuth(
   req: AuthRequest,
@@ -17,10 +22,7 @@ export async function requireAuth(
   }
 
   const token = authHeader.slice(7);
-
-  // Verify token with Supabase
-  const client = createClient(supabaseUrl, anonKey);
-  const { data: { user }, error } = await client.auth.getUser(token);
+  const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
 
   if (error || !user) {
     res.status(401).json({ error: 'Invalid or expired token' });
@@ -32,8 +34,6 @@ export async function requireAuth(
     return;
   }
 
-  // Fetch user row from public.users
-  const { supabaseAdmin } = await import('../lib/supabase');
   const { data: userRow } = await supabaseAdmin
     .from('users')
     .select('id, email, role, status')
