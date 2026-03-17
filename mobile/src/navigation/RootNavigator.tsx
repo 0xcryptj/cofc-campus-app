@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
@@ -67,7 +68,13 @@ export default function RootNavigator() {
     return () => sub.remove();
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0E0F13', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#8C1D40" />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer linking={linking}>

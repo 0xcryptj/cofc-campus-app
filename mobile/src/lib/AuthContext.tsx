@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 interface AuthContextValue {
   session: Session | null;
@@ -21,19 +21,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load existing session
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    // If Supabase isn't configured yet, skip straight to the auth screens
+    if (!isSupabaseConfigured) {
       setLoading(false);
-    });
+      return;
+    }
 
-    // Listen for auth changes (magic link callback, sign out, token refresh)
+    // 4-second failsafe so a network error never leaves the app stuck on blank
+    const failsafe = setTimeout(() => setLoading(false), 4000);
+
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        clearTimeout(failsafe);
+        setSession(data.session);
+        setLoading(false);
+      })
+      .catch(() => {
+        clearTimeout(failsafe);
+        setLoading(false);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(failsafe);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function signOut() {
