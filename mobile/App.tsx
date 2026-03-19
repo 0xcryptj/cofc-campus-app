@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Text } from 'react-native';
+import { Text, View, Platform } from 'react-native';
 import {
   useFonts,
   SpaceMono_400Regular,
@@ -31,6 +31,22 @@ export default function App() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
+
+  // On web (Expo desktop preview), constrain the app to a phone-width column
+  // centered in the browser. The dark outer shell makes it look like a phone
+  // viewport in a dark browser frame instead of a stretched website.
+  // On native iOS/Android the app renders at full device width as normal.
+  if (Platform.OS === 'web') {
+    return (
+      <AuthProvider>
+        <View style={{ flex: 1, backgroundColor: '#111111', alignItems: 'center' }}>
+          <View style={{ flex: 1, width: '100%', maxWidth: 430, overflow: 'hidden' }}>
+            <RootNavigator />
+          </View>
+        </View>
+      </AuthProvider>
+    );
+  }
 
   return (
     <AuthProvider>

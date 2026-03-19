@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -65,10 +66,12 @@ export default function SignUpScreen({ navigation }: Props) {
     setTouched(true);
     if (!isValid) return;
     setLoading(true);
+    // On native: deep link → charlestonteaapp://auth/callback
+    // On web (Expo dev): local URL → http://localhost:8081/auth/callback
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       options: {
-        emailRedirectTo: 'charlestonteaapp://auth/callback',
+        emailRedirectTo: Linking.createURL('auth/callback'),
       },
     });
     setLoading(false);

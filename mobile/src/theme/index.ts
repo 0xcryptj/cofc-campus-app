@@ -117,6 +117,15 @@ export const Elevation = {
   }) as object,
 };
 
+// ─── Layout — mobile-first content sizing ─────────────────────────────────────
+// maxWidth: the phone-frame width used in web preview (matches App.tsx shell)
+// contentPadding: standard horizontal padding for screen content
+
+export const Layout = {
+  maxWidth:       430,
+  contentPadding: 16,
+} as const;
+
 // ─── Dimensions ───────────────────────────────────────────────────────────────
 
 export const Dim = {

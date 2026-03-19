@@ -59,6 +59,11 @@ Desktop.ini
 # ─── TypeScript ──────────────────────────────────────────────────────────────
 *.tsbuildinfo
 
-# ─── Supabase (future) ───────────────────────────────────────────────────────
+# ─── Supabase ────────────────────────────────────────────────────────────────
 supabase/.branches/
 supabase/.temp/
+
+# ─── Agent / IDE tooling ─────────────────────────────────────────────────────
+# skills/ is a duplicate of .agents/skills/ — commit .agents/ only
+.claude/skills/
+skills/
