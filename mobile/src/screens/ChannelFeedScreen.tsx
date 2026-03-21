@@ -6,48 +6,49 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
-  Dimensions,
+  useWindowDimensions,
   RefreshControl,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import PostCard from '../components/PostCard';
 import SkeletonCard from '../components/SkeletonCard';
-import { Colors, Type, Space, Radius, Elevation } from '../theme';
+import { Colors, Type, Space, Radius, ms } from '../theme';
 import { CHANNELS } from '../types';
 import type { Channel, Post } from '../types';
 import { MOCK_IDENTITIES } from '../services/mockData';
 import { getPosts, upvotePost, apiPostToLocal } from '../services/api';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
-// useNativeDriver:true is unsupported on web; false works on all platforms
 const ND = Platform.OS !== 'web';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// ─── Segment control layout ───────────────────────────────────────────────────
-// Fixed compact width so channels sit snug together instead of spreading
-// across the full screen. Cap at 340px so it never overflows.
-const INSET       = 3;
-const TRACK_WIDTH = Math.min(SCREEN_WIDTH - Space.md * 2, 340);
-const PILL_WIDTH  = (TRACK_WIDTH - INSET * 2) / CHANNELS.length;
+const INSET = 3;
+const SEGMENT_H = ms(36);
+const MAX_TRACK = 400;
 
 export default function ChannelFeedScreen() {
-  const navigation   = useNavigation<Nav>();
-  const insets       = useSafeAreaInsets();
+  const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+
+  const TRACK_WIDTH = Math.min(screenWidth - Space.md * 2, MAX_TRACK);
+  const PILL_WIDTH  = (TRACK_WIDTH - INSET * 2) / CHANNELS.length;
+
   const [activeIdx, setActiveIdx] = useState(0);
-  const [posts, setPosts]         = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading]    = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const pillX = useRef(new Animated.Value(0)).current;
   const activeIdentity = MOCK_IDENTITIES[0];
   const activeChannel: Channel = CHANNELS[activeIdx].id;
+  const isDating = activeChannel === 'dating';
 
   const fetchPosts = useCallback(async (channel: Channel) => {
     try {
@@ -70,8 +71,8 @@ export default function ChannelFeedScreen() {
     setActiveIdx(idx);
     Animated.spring(pillX, {
       toValue: idx * PILL_WIDTH,
-      damping: 15,
-      stiffness: 180,
+      damping: 16,
+      stiffness: 200,
       useNativeDriver: ND,
     }).start();
   }
@@ -95,33 +96,42 @@ export default function ChannelFeedScreen() {
     );
   }
 
+  const activePillColor = isDating ? Colors.datingPrimary : Colors.primary;
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
 
-      {/* ── Header ────────────────────────────────────── */}
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.wordmark} allowFontScaling={false}>
+        <Text style={[styles.wordmark, isDating && styles.wordmarkDating]} allowFontScaling={false}>
           Charleston Tea
         </Text>
+        {isDating && (
+          <Text style={styles.datingTagline} allowFontScaling={false}>
+            Find your person
+          </Text>
+        )}
       </View>
 
-      {/* ── Segment control ───────────────────────────── */}
+      {/* Segment control */}
       <View style={styles.segmentOuter}>
-        <View style={styles.segmentTrack}>
-          {/* Sliding pill */}
+        <View style={[styles.segmentTrack, { width: TRACK_WIDTH }]}>
           <Animated.View
             style={[
               styles.segmentPill,
-              { width: PILL_WIDTH, transform: [{ translateX: pillX }] },
+              {
+                width: PILL_WIDTH,
+                backgroundColor: activePillColor,
+                transform: [{ translateX: pillX }],
+              },
             ]}
           />
-          {/* Labels — rendered above the pill via zIndex */}
           {CHANNELS.map((ch, i) => {
             const active = i === activeIdx;
             return (
               <TouchableOpacity
                 key={ch.id}
-                style={[styles.segmentItem, { width: PILL_WIDTH }]}
+                style={[styles.segmentItem, { width: PILL_WIDTH, height: SEGMENT_H }]}
                 onPress={() => selectChannel(i)}
                 activeOpacity={0.75}
               >
@@ -138,7 +148,7 @@ export default function ChannelFeedScreen() {
         </View>
       </View>
 
-      {/* ── Skeleton loading ──────────────────────────── */}
+      {/* Skeleton / Feed */}
       {loading ? (
         <View>
           <SkeletonCard />
@@ -146,13 +156,12 @@ export default function ChannelFeedScreen() {
           <SkeletonCard />
         </View>
       ) : (
-        /* ── Feed ─────────────────────────────────────── */
         <FlatList
           data={posts}
           keyExtractor={item => item.id}
           contentContainerStyle={[
             styles.feedContent,
-            { paddingBottom: insets.bottom + 88 },
+            { paddingBottom: insets.bottom + ms(100) },
           ]}
           showsVerticalScrollIndicator={false}
           windowSize={5}
@@ -162,7 +171,7 @@ export default function ChannelFeedScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primary}
+              tintColor={isDating ? Colors.datingPrimary : Colors.primary}
             />
           }
           renderItem={({ item }) => (
@@ -175,20 +184,30 @@ export default function ChannelFeedScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
+              <Ionicons
+                name={isDating ? 'heart-outline' : 'chatbubbles-outline'}
+                size={ms(40)}
+                color={isDating ? Colors.datingPrimary : Colors.textMuted}
+                style={{ marginBottom: Space.sm }}
+              />
               <Text style={styles.emptyTitle}>Nothing here yet.</Text>
-              <Text style={styles.emptySubtitle}>Be the first.</Text>
+              <Text style={styles.emptySubtitle}>Be the first to post.</Text>
             </View>
           }
         />
       )}
 
-      {/* ── FAB ───────────────────────────────────────── */}
+      {/* FAB */}
       <TouchableOpacity
-        style={[styles.fab, { bottom: insets.bottom + Space.lg }]}
+        style={[
+          styles.fab,
+          { bottom: insets.bottom + Space.lg },
+          isDating && styles.fabDating,
+        ]}
         onPress={() => navigation.navigate('CreatePost')}
         activeOpacity={0.85}
       >
-        <Text style={styles.fabIcon} allowFontScaling={false}>+</Text>
+        <Ionicons name="add" size={ms(26)} color={Colors.white} />
       </TouchableOpacity>
 
     </View>
@@ -201,11 +220,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
-  // ── Header ─────────────────────────────────────────
   header: {
     paddingHorizontal: Space.md,
     paddingTop: Space.sm,
-    paddingBottom: Space.sm,
+    paddingBottom: Space.xs,
   },
   wordmark: {
     fontSize: Type.size.section,
@@ -214,15 +232,24 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: Type.tracking.tight,
   },
+  wordmarkDating: {
+    color: Colors.datingPrimary,
+  },
+  datingTagline: {
+    fontSize: Type.size.caption,
+    fontWeight: Type.weight.medium,
+    color: Colors.datingPrimary,
+    letterSpacing: Type.tracking.label,
+    marginTop: 1,
+    opacity: 0.75,
+  },
 
-  // ── Segment ───────────────────────────────────────
   segmentOuter: {
-    alignItems: 'center',      // center the fixed-width track
+    alignItems: 'center',
     marginBottom: Space.sm,
   },
   segmentTrack: {
     flexDirection: 'row',
-    width: TRACK_WIDTH,        // fixed compact width
     backgroundColor: Colors.border,
     borderRadius: Radius.xl,
     padding: INSET,
@@ -233,17 +260,15 @@ const styles = StyleSheet.create({
     top: INSET,
     left: INSET,
     bottom: INSET,
-    backgroundColor: Colors.primary,
     borderRadius: Radius.xl - INSET,
   },
   segmentItem: {
-    height: 34,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
   },
   segmentLabel: {
-    fontSize: 10,
+    fontSize: ms(11),
     fontWeight: Type.weight.semibold,
     fontFamily: 'SpaceMono_700Bold',
     color: Colors.textMuted,
@@ -253,15 +278,13 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
 
-  // ── Feed ──────────────────────────────────────────
   feedContent: {
     paddingTop: Space.xs,
   },
 
-  // ── Empty state ───────────────────────────────────
   empty: {
     alignItems: 'center',
-    paddingTop: 80,
+    paddingTop: ms(80),
     gap: Space.xs,
   },
   emptyTitle: {
@@ -275,26 +298,26 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
 
-  // ── FAB ───────────────────────────────────────────
   fab: {
     position: 'absolute',
     right: Space.lg,
-    width: 52,
-    height: 52,
+    width: ms(54),
+    height: ms(54),
     borderRadius: Radius.full,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
     ...Platform.select({
-      web:     { boxShadow: `0px 6px 12px rgba(128,0,32,0.35)` },
-      default: { shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12 },
+      web:     { boxShadow: '0px 6px 14px rgba(128,0,32,0.30)' },
+      default: { shadowColor: Colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.30, shadowRadius: 14 },
     }),
   },
-  fabIcon: {
-    fontSize: 26,
-    color: Colors.white,
-    lineHeight: 30,
-    marginTop: -1,
+  fabDating: {
+    backgroundColor: Colors.datingPrimary,
+    ...Platform.select({
+      web:     { boxShadow: '0px 6px 14px rgba(201,81,90,0.30)' },
+      default: { shadowColor: Colors.datingPrimary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.30, shadowRadius: 14 },
+    }),
   },
 });

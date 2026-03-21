@@ -4,13 +4,14 @@ import {
   StyleSheet, KeyboardAvoidingView, Platform, RefreshControl,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Avatar from '../components/Avatar';
 import FadeImage from '../components/FadeImage';
-import { Colors, Type, Space, Radius, Elevation } from '../theme';
+import { Colors, Type, Space, Radius, Elevation, ms } from '../theme';
 import { timeAgo } from '../utils/timeAgo';
 import { MOCK_IDENTITIES } from '../services/mockData';
 import { getComments, addComment, submitReport, apiCommentToLocal } from '../services/api';
@@ -21,6 +22,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
 export default function PostDetailScreen({ route }: Props) {
   const { post } = route.params;
   const insets = useSafeAreaInsets();
+  const isDating = post.channel === 'dating';
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -81,6 +83,8 @@ export default function PostDetailScreen({ route }: Props) {
     ]);
   }
 
+  const accentColor = isDating ? Colors.datingPrimary : Colors.primary;
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -96,27 +100,39 @@ export default function PostDetailScreen({ route }: Props) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={Colors.primary}
+            tintColor={accentColor}
           />
         }
 
-        /* ── Original post — pinned at top ─────────── */
         ListHeaderComponent={
           <View>
-            <View style={styles.pinnedCard}>
+            <View style={[styles.pinnedCard, isDating && styles.pinnedCardDating]}>
+              {isDating && <View style={[styles.datingAccentBar, { backgroundColor: Colors.datingPrimary }]} />}
               {post.imageUri ? <FadeImage uri={post.imageUri} aspectRatio={4 / 3} /> : null}
               <View style={styles.pinnedBody}>
-                <Text style={styles.pinnedText}>{post.textBody}</Text>
+                <Text style={[styles.pinnedText, isDating && styles.pinnedTextDating]}>
+                  {post.textBody}
+                </Text>
               </View>
-              <View style={styles.pinnedFooter}>
-                <Avatar displayName={post.anonDisplayName} size={36} />
+              <View style={[styles.pinnedFooter, isDating && styles.pinnedFooterDating]}>
+                <Avatar displayName={post.anonDisplayName} size={ms(36)} isDating={isDating} />
                 <View style={styles.pinnedMeta}>
                   <Text style={styles.pinnedName}>{post.anonDisplayName}</Text>
                   <Text style={styles.pinnedTime}>{timeAgo(post.createdAt)}</Text>
                 </View>
                 <View style={styles.pinnedStats}>
-                  <Text style={styles.statText}>▲ {post.upvoteCount}</Text>
-                  <Text style={styles.statText}>◯ {post.commentCount}</Text>
+                  <View style={styles.statItem}>
+                    <Ionicons
+                      name={isDating ? 'heart-outline' : 'arrow-up-circle-outline'}
+                      size={ms(14)}
+                      color={Colors.textMuted}
+                    />
+                    <Text style={styles.statText}>{post.upvoteCount}</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Ionicons name="chatbubble-outline" size={ms(13)} color={Colors.textMuted} />
+                    <Text style={styles.statText}>{post.commentCount}</Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -129,11 +145,10 @@ export default function PostDetailScreen({ route }: Props) {
           </View>
         }
 
-        /* ── Comment rows ──────────────────────────── */
         renderItem={({ item }) => (
           <View style={styles.commentRow}>
-            <Avatar displayName={item.anonDisplayName} size={36} />
-            <View style={styles.commentBubble}>
+            <Avatar displayName={item.anonDisplayName} size={ms(34)} isDating={isDating} />
+            <View style={[styles.commentBubble, isDating && styles.commentBubbleDating]}>
               <View style={styles.commentHeader}>
                 <Text style={styles.commentName}>{item.anonDisplayName}</Text>
                 <Text style={styles.commentTime}>{timeAgo(item.createdAt)}</Text>
@@ -142,9 +157,7 @@ export default function PostDetailScreen({ route }: Props) {
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   style={styles.commentReport}
                 >
-                  <View style={styles.dotRow}>
-                    <View style={styles.dot} /><View style={styles.dot} /><View style={styles.dot} />
-                  </View>
+                  <Ionicons name="ellipsis-horizontal" size={ms(14)} color={Colors.textMuted} />
                 </TouchableOpacity>
               </View>
               <Text style={styles.commentText}>{item.text}</Text>
@@ -153,12 +166,12 @@ export default function PostDetailScreen({ route }: Props) {
         )}
       />
 
-      {/* ── Reply bar — pinned above keyboard ─────── */}
+      {/* Reply bar */}
       <View style={[styles.replyBar, { paddingBottom: insets.bottom + Space.sm }]}>
-        <Avatar displayName={activeIdentity.displayName} size={36} />
+        <Avatar displayName={activeIdentity.displayName} size={ms(34)} isDating={isDating} />
         <TextInput
-          style={styles.replyInput}
-          placeholder="Reply anonymously…"
+          style={[styles.replyInput, isDating && styles.replyInputDating]}
+          placeholder={isDating ? 'Reply anonymously…' : 'Reply anonymously…'}
           placeholderTextColor={Colors.textMuted}
           value={draft}
           onChangeText={setDraft}
@@ -168,9 +181,13 @@ export default function PostDetailScreen({ route }: Props) {
         <TouchableOpacity
           onPress={submitComment}
           disabled={!draft.trim()}
-          style={[styles.sendBtn, !draft.trim() && styles.sendBtnDisabled]}
+          style={[
+            styles.sendBtn,
+            { backgroundColor: accentColor },
+            !draft.trim() && styles.sendBtnDisabled,
+          ]}
         >
-          <Text style={styles.sendBtnText} allowFontScaling={false}>↑</Text>
+          <Ionicons name="arrow-up" size={ms(16)} color={Colors.white} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -183,13 +200,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
 
-  // ── Pinned post ─────────────────────────────────
+  // Pinned post
   pinnedCard: {
     backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.border,
     marginBottom: Space.sm,
     ...Elevation.card,
+  },
+  pinnedCardDating: {
+    backgroundColor: Colors.datingCard,
+    borderBottomColor: Colors.datingBorder,
+  },
+  datingAccentBar: {
+    height: 3,
   },
   pinnedBody: {
     paddingHorizontal: Space.md,
@@ -201,14 +225,21 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     lineHeight: Type.leading.body,
   },
+  pinnedTextDating: {
+    fontSize: ms(15),
+    lineHeight: ms(22),
+  },
   pinnedFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Space.md,
     paddingVertical: Space.sm + 2,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: Colors.border,
     gap: Space.sm,
+  },
+  pinnedFooterDating: {
+    borderTopColor: Colors.datingBorder,
   },
   pinnedMeta: {
     flex: 1,
@@ -230,6 +261,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Space.md,
   },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   statText: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.medium,
@@ -237,7 +273,7 @@ const styles = StyleSheet.create({
     letterSpacing: Type.tracking.caption,
   },
 
-  // ── Comments section label ───────────────────────
+  // Comments section label
   commentsHeading: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.semibold,
@@ -249,7 +285,7 @@ const styles = StyleSheet.create({
     paddingBottom: Space.sm,
   },
 
-  // ── Comment row ─────────────────────────────────
+  // Comment row
   commentRow: {
     flexDirection: 'row',
     paddingHorizontal: Space.md,
@@ -260,11 +296,15 @@ const styles = StyleSheet.create({
   commentBubble: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Space.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
     ...Elevation.card,
+  },
+  commentBubbleDating: {
+    backgroundColor: Colors.datingCard,
+    borderColor: Colors.datingBorder,
   },
   commentHeader: {
     flexDirection: 'row',
@@ -293,18 +333,8 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     lineHeight: Type.leading.body,
   },
-  dotRow: {
-    flexDirection: 'row',
-    gap: 3,
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.textMuted,
-  },
 
-  // ── Reply bar ─────────────────────────────────────
+  // Reply bar
   replyBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,36 +342,31 @@ const styles = StyleSheet.create({
     paddingTop: Space.sm,
     gap: Space.sm,
     backgroundColor: Colors.surface,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: Colors.border,
   },
   replyInput: {
     flex: 1,
     backgroundColor: Colors.inputBg,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.xl,
     paddingHorizontal: Space.md,
     paddingVertical: Space.sm,
     fontSize: Type.size.body,
     color: Colors.textPrimary,
-    maxHeight: 100,
+    maxHeight: ms(100),
     lineHeight: Type.leading.body,
   },
+  replyInputDating: {
+    backgroundColor: Colors.datingHeartFaint,
+  },
   sendBtn: {
-    width: 36,
-    height: 36,
+    width: ms(36),
+    height: ms(36),
     borderRadius: Radius.full,
-    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendBtnDisabled: {
     opacity: 0.35,
-  },
-  sendBtnText: {
-    color: Colors.white,
-    fontSize: 18,
-    fontWeight: Type.weight.bold,
-    fontFamily: 'SpaceMono_700Bold',
-    lineHeight: 22,
   },
 });

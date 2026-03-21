@@ -3,8 +3,9 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   SafeAreaView, Alert, ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Avatar from '../components/Avatar';
-import { Colors, Type, Space, Radius, Elevation } from '../theme';
+import { Colors, Type, Space, Radius, Elevation, ms } from '../theme';
 import { generateIdentity } from '../utils/generateIdentity';
 import { getAliases, createAlias, deleteAlias } from '../services/api';
 import type { AnonIdentity } from '../types';
@@ -84,15 +85,13 @@ export default function IdentityManagerScreen() {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Identities</Text>
           <Text style={styles.subtitle}>
-            Up to {MAX} anonymous identities. Other users only see the display name — never your account.
+            Up to {MAX} anonymous identities. Others only see your display name — never your account.
           </Text>
         </View>
 
-        {/* Identity cards */}
         {identities.map(identity => {
           const active = identity.id === activeId;
           return (
@@ -103,22 +102,20 @@ export default function IdentityManagerScreen() {
               activeOpacity={0.8}
             >
               <View style={styles.cardLeft}>
-                <Avatar displayName={identity.displayName} size={48} />
+                <Avatar displayName={identity.displayName} size={ms(46)} />
                 <View style={styles.cardText}>
                   <Text style={styles.cardName}>{identity.displayName}</Text>
-                  <Text style={styles.cardStatus}>
+                  <Text style={[styles.cardStatus, active && styles.cardStatusActive]}>
                     {active ? 'Active identity' : 'Tap to switch'}
                   </Text>
                 </View>
               </View>
 
-              {active && (
+              {active ? (
                 <View style={styles.activeBadge}>
-                  <Text style={styles.activeBadgeText} allowFontScaling={false}>✓</Text>
+                  <Ionicons name="checkmark" size={ms(13)} color={Colors.white} />
                 </View>
-              )}
-
-              {!active && (
+              ) : (
                 <TouchableOpacity
                   onPress={() => remove(identity.id)}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -130,15 +127,13 @@ export default function IdentityManagerScreen() {
           );
         })}
 
-        {/* Add button */}
         {identities.length < MAX && (
           <TouchableOpacity style={styles.addBtn} onPress={create} activeOpacity={0.7}>
-            <Text style={styles.addBtnIcon} allowFontScaling={false}>+</Text>
+            <Ionicons name="add-circle-outline" size={ms(20)} color={Colors.primary} />
             <Text style={styles.addBtnLabel}>New Identity</Text>
           </TouchableOpacity>
         )}
 
-        {/* Privacy note */}
         <Text style={styles.note}>
           All posts are publicly anonymous. Your real account is stored privately to
           enable moderation and safety review if needed.
@@ -163,7 +158,6 @@ const styles = StyleSheet.create({
     paddingBottom: Space.xxl,
   },
 
-  // ── Header ──────────────────────────────────────
   header: {
     paddingVertical: Space.sm,
     gap: Space.xs,
@@ -181,10 +175,9 @@ const styles = StyleSheet.create({
     lineHeight: Type.leading.body,
   },
 
-  // ── Identity card ────────────────────────────────
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Space.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -194,6 +187,7 @@ const styles = StyleSheet.create({
   },
   cardActive: {
     borderColor: Colors.primary,
+    backgroundColor: Colors.primaryFaint,
   },
   cardLeft: {
     flexDirection: 'row',
@@ -214,22 +208,19 @@ const styles = StyleSheet.create({
   cardStatus: {
     fontSize: Type.size.caption,
     fontWeight: Type.weight.medium,
-    color: Colors.primary,
+    color: Colors.textMuted,
     letterSpacing: Type.tracking.caption,
   },
+  cardStatusActive: {
+    color: Colors.primary,
+  },
   activeBadge: {
-    width: 24,
-    height: 24,
+    width: ms(24),
+    height: ms(24),
     borderRadius: Radius.full,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  activeBadgeText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: Type.weight.bold,
-    fontFamily: 'SpaceMono_700Bold',
   },
   deleteText: {
     fontSize: Type.size.label,
@@ -237,23 +228,16 @@ const styles = StyleSheet.create({
     fontWeight: Type.weight.medium,
   },
 
-  // ── Add button ──────────────────────────────────
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Space.sm,
-    height: 52,
-    borderRadius: Radius.md,
+    height: ms(52),
+    borderRadius: Radius.lg,
     borderWidth: 1.5,
     borderColor: Colors.primary,
     borderStyle: 'dashed',
-  },
-  addBtnIcon: {
-    fontSize: 20,
-    color: Colors.primary,
-    fontWeight: Type.weight.regular,
-    lineHeight: 24,
   },
   addBtnLabel: {
     fontSize: Type.size.body,
@@ -262,11 +246,10 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 
-  // ── Note ─────────────────────────────────────────
   note: {
     fontSize: Type.size.caption,
     color: Colors.textMuted,
-    lineHeight: 16,
+    lineHeight: ms(16),
     textAlign: 'center',
     letterSpacing: Type.tracking.caption,
     paddingHorizontal: Space.md,

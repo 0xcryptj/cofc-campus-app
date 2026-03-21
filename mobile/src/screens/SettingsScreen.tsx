@@ -3,17 +3,21 @@ import {
   View, Text, StyleSheet, SafeAreaView,
   TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
-import { Colors, Type, Space, Radius, Elevation } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Type, Space, Radius, Elevation, ms } from '../theme';
 import { useAuth } from '../lib/AuthContext';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 interface RowProps {
   label: string;
+  iconName?: IoniconName;
   value?: string;
   destructive?: boolean;
   onPress?: () => void;
 }
 
-function Row({ label, value, destructive, onPress }: RowProps) {
+function Row({ label, iconName, value, destructive, onPress }: RowProps) {
   return (
     <TouchableOpacity
       style={styles.row}
@@ -21,11 +25,24 @@ function Row({ label, value, destructive, onPress }: RowProps) {
       disabled={!onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      <Text style={[styles.rowLabel, destructive && styles.rowLabelDestructive]}>
-        {label}
-      </Text>
-      {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-      {onPress && !value ? <Text style={styles.rowArrow}>›</Text> : null}
+      <View style={styles.rowLeft}>
+        {iconName ? (
+          <Ionicons
+            name={iconName}
+            size={ms(18)}
+            color={destructive ? Colors.error : Colors.textMuted}
+            style={{ marginRight: Space.sm }}
+          />
+        ) : null}
+        <Text style={[styles.rowLabel, destructive && styles.rowLabelDestructive]}>
+          {label}
+        </Text>
+      </View>
+      {value ? (
+        <Text style={styles.rowValue}>{value}</Text>
+      ) : onPress ? (
+        <Ionicons name="chevron-forward" size={ms(16)} color={Colors.textMuted} />
+      ) : null}
     </TouchableOpacity>
   );
 }
@@ -53,9 +70,9 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <Text style={styles.groupLabel}>Account</Text>
           <View style={styles.card}>
-            <Row label="Sign Out" onPress={handleSignOut} />
+            <Row label="Sign Out" iconName="log-out-outline" onPress={handleSignOut} />
             <View style={styles.divider} />
-            <Row label="Delete Account" destructive onPress={() => {}} />
+            <Row label="Delete Account" iconName="trash-outline" destructive onPress={() => {}} />
           </View>
         </View>
 
@@ -63,9 +80,9 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <Text style={styles.groupLabel}>About</Text>
           <View style={styles.card}>
-            <Row label="Version" value="1.0.0" />
+            <Row label="Version" iconName="information-circle-outline" value="1.0.0" />
             <View style={styles.divider} />
-            <Row label="Only for @g.cofc.edu students" />
+            <Row label="Only for @g.cofc.edu students" iconName="school-outline" />
           </View>
         </View>
 
@@ -73,15 +90,15 @@ export default function SettingsScreen() {
         <View style={styles.group}>
           <Text style={styles.groupLabel}>Legal</Text>
           <View style={styles.card}>
-            <Row label="Privacy Policy" onPress={() => {}} />
+            <Row label="Privacy Policy" iconName="shield-checkmark-outline" onPress={() => {}} />
             <View style={styles.divider} />
-            <Row label="Terms of Service" onPress={() => {}} />
+            <Row label="Terms of Service" iconName="document-text-outline" onPress={() => {}} />
           </View>
         </View>
 
         <Text style={styles.footer}>
           Charleston Tea · v1.0.0{'\n'}
-          Posts are anonymous publicly. User records are stored privately for moderation and safety.
+          Posts are anonymous publicly. User records are stored privately for moderation.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -110,7 +127,6 @@ const styles = StyleSheet.create({
     paddingVertical: Space.sm,
   },
 
-  // ── Group ─────────────────────────────────────
   group: {
     gap: Space.sm,
   },
@@ -125,20 +141,24 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    borderWidth: 1,
+    borderRadius: Radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
     overflow: 'hidden',
     ...Elevation.card,
   },
 
-  // ── Row ───────────────────────────────────────
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Space.md,
     paddingVertical: Space.md,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   rowLabel: {
     fontSize: Type.size.body,
@@ -151,23 +171,17 @@ const styles = StyleSheet.create({
     fontSize: Type.size.body,
     color: Colors.textMuted,
   },
-  rowArrow: {
-    fontSize: 18,
-    color: Colors.textMuted,
-    lineHeight: 22,
-  },
   divider: {
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.border,
     marginHorizontal: Space.md,
   },
 
-  // ── Footer ────────────────────────────────────
   footer: {
     fontSize: Type.size.caption,
     color: Colors.textMuted,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: ms(18),
     letterSpacing: Type.tracking.caption,
     paddingTop: Space.sm,
   },

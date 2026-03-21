@@ -1,4 +1,19 @@
-import { Platform } from 'react-native';
+import { Platform, Dimensions, PixelRatio } from 'react-native';
+
+// ─── Responsive scale helpers ─────────────────────────────────────────────────
+
+const BASE_WIDTH = 390; // iPhone 15 Pro reference width
+
+/** Full linear scale relative to screen width */
+export function scale(size: number): number {
+  const { width } = Dimensions.get('window');
+  return Math.round(PixelRatio.roundToNearestPixel(size * (width / BASE_WIDTH)));
+}
+
+/** Moderate scale — scales fonts/spacing less aggressively (factor 0–1) */
+export function ms(size: number, factor = 0.45): number {
+  return Math.round(size + (scale(size) - size) * factor);
+}
 
 // ─── Font families ────────────────────────────────────────────────────────────
 
@@ -39,19 +54,28 @@ export const Colors = {
   white:         '#FFFFFF',
   black:         '#000000',
   transparent:   'transparent',
+
+  // ── Dating channel palette (Tea-app inspired) ─────────────────────────────
+  datingPrimary:  '#C9515A',   // warm rose
+  datingPressed:  '#A73B43',
+  datingFaint:    'rgba(201,81,90,0.07)',
+  datingBorder:   'rgba(201,81,90,0.22)',
+  datingCard:     '#FFF9F9',   // barely-there rose tint
+  datingHeart:    '#E05563',   // active heart
+  datingHeartFaint:'rgba(224,85,99,0.10)',
 } as const;
 
 // ─── Typography tokens ────────────────────────────────────────────────────────
 
 export const Type = {
-  // Sizes
+  // Sizes (moderate-scaled so they flex slightly across screens)
   size: {
-    caption:  10,
-    label:    12,
-    body:     14,
-    card:     20,
-    section:  24,
-    screen:   32,
+    caption:  ms(10),
+    label:    ms(12),
+    body:     ms(14),
+    card:     ms(20),
+    section:  ms(22),
+    screen:   ms(30),
   },
 
   // Weights
@@ -64,9 +88,9 @@ export const Type = {
 
   // Line heights
   leading: {
-    tight:  14,
-    body:   20,
-    loose:  26,
+    tight:  ms(14),
+    body:   ms(20),
+    loose:  ms(26),
   },
 
   // Letter spacing
@@ -79,38 +103,35 @@ export const Type = {
   },
 } as const;
 
-// ─── Spacing — 8px base unit ──────────────────────────────────────────────────
+// ─── Spacing — 8px base unit (moderate-scaled) ────────────────────────────────
 
 export const Space = {
-  xs:   4,
-  sm:   8,
-  md:   16,
-  lg:   24,
-  xl:   32,
-  xxl:  48,
+  xs:   ms(4),
+  sm:   ms(8),
+  md:   ms(16),
+  lg:   ms(24),
+  xl:   ms(32),
+  xxl:  ms(48),
 } as const;
 
 // ─── Radii ────────────────────────────────────────────────────────────────────
 
 export const Radius = {
   xs:   2,
-  sm:   4,
-  md:   8,
-  lg:   12,
-  xl:   16,
+  sm:   6,
+  md:   10,
+  lg:   14,
+  xl:   18,
   full: 9999,
 } as const;
 
 // ─── Elevation / shadows ──────────────────────────────────────────────────────
 
 export const Elevation = {
-  // Spec-defined card shadow
-  // Web uses boxShadow; native uses shadow* props (react-native-web warns on shadow*)
   card: Platform.select({
     web:     { boxShadow: '0px 1px 4px rgba(0,0,0,0.06)' },
     default: { elevation: 2, shadowColor: '#000000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } },
   }) as object,
-  // Stronger — modal, bottom sheet
   modal: Platform.select({
     web:     { boxShadow: '0px 4px 12px rgba(0,0,0,0.12)' },
     default: { elevation: 8, shadowColor: '#000000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
@@ -129,11 +150,11 @@ export const Layout = {
 // ─── Dimensions ───────────────────────────────────────────────────────────────
 
 export const Dim = {
-  buttonHeight:  44,
-  inputHeight:   44,
-  avatarSm:      36,
-  avatarMd:      48,
-  avatarLg:      64,
-  tabBarHeight:  60,
-  fabSize:       52,
+  buttonHeight:  ms(48),
+  inputHeight:   ms(48),
+  avatarSm:      ms(36),
+  avatarMd:      ms(48),
+  avatarLg:      ms(64),
+  tabBarHeight:  ms(56),
+  fabSize:       ms(54),
 } as const;

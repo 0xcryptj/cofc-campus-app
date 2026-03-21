@@ -1,19 +1,39 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Type, Dim } from '../theme';
+import { Colors, Type, ms } from '../theme';
 
 interface Props {
   displayName: string;
-  size?: 36 | 48 | 64;
+  size?: number;
+  isDating?: boolean;
 }
 
-export default function Avatar({ displayName, size = Dim.avatarSm }: Props) {
+export default function Avatar({ displayName, size = ms(36), isDating = false }: Props) {
   const initial = displayName.charAt(0).toUpperCase();
-  const fontSize = size === 36 ? 13 : size === 48 ? 17 : 22;
+  const fontSize = Math.round(size * 0.38);
 
   return (
-    <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.initial, { fontSize }]} allowFontScaling={false}>
+    <View
+      style={[
+        styles.circle,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: isDating ? Colors.datingFaint : Colors.primaryFaint,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.initial,
+          {
+            fontSize,
+            color: isDating ? Colors.datingPrimary : Colors.primary,
+          },
+        ]}
+        allowFontScaling={false}
+      >
         {initial}
       </Text>
     </View>
@@ -22,12 +42,10 @@ export default function Avatar({ displayName, size = Dim.avatarSm }: Props) {
 
 const styles = StyleSheet.create({
   circle: {
-    backgroundColor: Colors.primaryFaint,
     justifyContent: 'center',
     alignItems: 'center',
   },
   initial: {
-    color: Colors.primary,
     fontWeight: Type.weight.semibold,
     fontFamily: 'SpaceMono_700Bold',
     letterSpacing: 0.2,

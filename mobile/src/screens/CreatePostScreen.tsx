@@ -3,13 +3,14 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Avatar from '../components/Avatar';
 import Button from '../components/Button';
-import { Colors, Type, Space, Radius, Elevation } from '../theme';
+import { Colors, Type, Space, Radius, Elevation, ms } from '../theme';
 import { CHANNELS } from '../types';
 import type { Channel } from '../types';
 import { MOCK_IDENTITIES } from '../services/mockData';
@@ -28,6 +29,7 @@ export default function CreatePostScreen() {
   const activeIdentity = MOCK_IDENTITIES[0];
   const remaining = MAX_CHARS - text.length;
   const canPost = text.trim().length > 0 && text.length <= MAX_CHARS;
+  const isDating = channel === 'dating';
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -76,29 +78,39 @@ export default function CreatePostScreen() {
       showsVerticalScrollIndicator={false}
     >
 
-      {/* ── Identity row ──────────────────────────── */}
+      {/* Identity row */}
       <View style={styles.identityRow}>
-        <Avatar displayName={activeIdentity.displayName} size={48} />
+        <Avatar displayName={activeIdentity.displayName} size={ms(46)} isDating={isDating} />
         <View>
           <Text style={styles.identityLabel}>Posting as</Text>
           <Text style={styles.identityName}>{activeIdentity.displayName}</Text>
         </View>
       </View>
 
-      {/* ── Channel selector ──────────────────────── */}
+      {/* Channel selector */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Channel</Text>
         <View style={styles.channelRow}>
           {CHANNELS.map(ch => {
             const active = ch.id === channel;
+            const isThisDating = ch.id === 'dating';
             return (
               <TouchableOpacity
                 key={ch.id}
                 onPress={() => setChannel(ch.id)}
-                style={[styles.channelChip, active && styles.channelChipActive]}
+                style={[
+                  styles.channelChip,
+                  active && {
+                    backgroundColor: isThisDating ? Colors.datingFaint : Colors.primaryFaint,
+                    borderColor: isThisDating ? Colors.datingPrimary : Colors.primary,
+                  },
+                ]}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.channelChipLabel, active && styles.channelChipLabelActive]}>
+                <Text style={[
+                  styles.channelChipLabel,
+                  active && { color: isThisDating ? Colors.datingPrimary : Colors.primary },
+                ]}>
                   {ch.label}
                 </Text>
               </TouchableOpacity>
@@ -107,12 +119,15 @@ export default function CreatePostScreen() {
         </View>
       </View>
 
-      {/* ── Compose ───────────────────────────────── */}
+      {/* Compose */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Post</Text>
         <TextInput
-          style={styles.compose}
-          placeholder="What's the tea?"
+          style={[
+            styles.compose,
+            isDating && styles.composeDating,
+          ]}
+          placeholder={isDating ? "What's on your mind? 💌" : "What's the tea?"}
           placeholderTextColor={Colors.textMuted}
           value={text}
           onChangeText={setText}
@@ -125,22 +140,24 @@ export default function CreatePostScreen() {
         </Text>
       </View>
 
-      {/* ── Photo ─────────────────────────────────── */}
+      {/* Photo */}
       {imageUri ? (
         <View style={styles.imagePreviewWrap}>
           <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
           <TouchableOpacity style={styles.removeImageBtn} onPress={() => setImageUri(null)}>
-            <Text style={styles.removeImageText} allowFontScaling={false}>✕</Text>
+            <Ionicons name="close" size={ms(14)} color={Colors.white} />
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={styles.addPhotoBtn} onPress={pickImage} activeOpacity={0.7}>
-          <Text style={styles.addPhotoIcon}>📷</Text>
-          <Text style={styles.addPhotoLabel}>Add Photo</Text>
+        <TouchableOpacity style={[styles.addPhotoBtn, { borderColor: isDating ? Colors.datingBorder : Colors.border }]} onPress={pickImage} activeOpacity={0.7}>
+          <Ionicons name="camera-outline" size={ms(20)} color={isDating ? Colors.datingPrimary : Colors.textMuted} />
+          <Text style={[styles.addPhotoLabel, isDating && { color: Colors.datingPrimary }]}>
+            Add Photo
+          </Text>
         </TouchableOpacity>
       )}
 
-      {/* ── Submit ────────────────────────────────── */}
+      {/* Submit */}
       <Button
         label="Post Anonymously"
         onPress={handlePost}
@@ -162,7 +179,6 @@ const styles = StyleSheet.create({
     gap: Space.lg,
   },
 
-  // ── Identity ──────────────────────────────────
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -184,7 +200,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  // ── Section ───────────────────────────────────
   section: {
     gap: Space.sm,
   },
@@ -197,7 +212,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // ── Channel chips ─────────────────────────────
   channelRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -211,10 +225,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.transparent,
   },
-  channelChipActive: {
-    backgroundColor: Colors.primaryFaint,
-    borderColor: Colors.primary,
-  },
   channelChipLabel: {
     fontSize: Type.size.label,
     fontWeight: Type.weight.semibold,
@@ -222,22 +232,22 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     letterSpacing: Type.tracking.caption,
   },
-  channelChipLabelActive: {
-    color: Colors.primary,
-  },
 
-  // ── Compose textarea ──────────────────────────
   compose: {
     backgroundColor: Colors.inputBg,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     padding: Space.md,
     fontSize: Type.size.body,
     color: Colors.textPrimary,
     lineHeight: Type.leading.body,
-    minHeight: 100,
-    maxHeight: 300,
-    borderWidth: 2,
+    minHeight: ms(110),
+    maxHeight: ms(280),
+    borderWidth: 1.5,
     borderColor: Colors.transparent,
+  },
+  composeDating: {
+    backgroundColor: Colors.datingHeartFaint,
+    borderColor: Colors.datingBorder,
   },
   charCount: {
     fontSize: Type.size.caption,
@@ -250,20 +260,15 @@ const styles = StyleSheet.create({
     color: Colors.error,
   },
 
-  // ── Image ─────────────────────────────────────
   addPhotoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Space.sm,
-    height: 52,
-    borderRadius: Radius.sm,
+    height: ms(52),
+    borderRadius: Radius.md,
     borderWidth: 1.5,
-    borderColor: Colors.border,
     borderStyle: 'dashed',
-  },
-  addPhotoIcon: {
-    fontSize: 18,
   },
   addPhotoLabel: {
     fontSize: Type.size.body,
@@ -284,17 +289,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Space.sm,
     right: Space.sm,
-    width: 28,
-    height: 28,
+    width: ms(28),
+    height: ms(28),
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  removeImageText: {
-    color: Colors.white,
-    fontSize: 12,
-    fontWeight: Type.weight.bold,
-    fontFamily: 'SpaceMono_700Bold',
   },
 });
